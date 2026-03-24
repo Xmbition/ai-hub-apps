@@ -38,36 +38,21 @@ In your currently active python environment, the above script will install:
   * AI Hub Models and model dependencies for stable diffusion.
   * The onnxruntime-qnn package, both to enable native ARM64 ONNX inference, as well as to enable targeting Qualcomm NPUs.
 
-7. Export model:
+7. Download the `PRECOMPILED_QNN_ONNX` model files from [Qualcomm HuggingFace Repo](https://huggingface.co/qualcomm/Stable-Diffusion-v2.1) based on your target device, e.g., X-Elite users choose `Snapdragon® X Elite`.
 
-```powershell
-python -m qai_hub_models.models.stable_diffusion_v2_1.export --target-runtime precompiled_qnn_onnx --device "Snapdragon X Elite CRD" --fetch-static-assets v0.39.1
-# WARNING: Do not rename `model.bin` files. This will break the demo.
-Expand-Archive -Path .\build\stable_diffusion_v2_1_w8a16\precompiled\qualcomm-snapdragon-x-elite\Stable-Diffusion-v2.1_text_encoder_w8a16.onnx.zip -DestinationPath .\build\stable_diffusion_v2_1_w8a16\precompiled\qualcomm-snapdragon-x-elite
-mv .\build\stable_diffusion_v2_1_w8a16\precompiled\qualcomm-snapdragon-x-elite\job*optimized_onnx .\build\stable_diffusion_v2_1_w8a16\precompiled\qualcomm-snapdragon-x-elite\text_encoder
-Expand-Archive -Path .\build\stable_diffusion_v2_1_w8a16\precompiled\qualcomm-snapdragon-x-elite\Stable-Diffusion-v2.1_unet_w8a16.onnx.zip -DestinationPath .\build\stable_diffusion_v2_1_w8a16\precompiled\qualcomm-snapdragon-x-elite
-mv .\build\stable_diffusion_v2_1_w8a16\precompiled\qualcomm-snapdragon-x-elite\job*optimized_onnx .\build\stable_diffusion_v2_1_w8a16\precompiled\qualcomm-snapdragon-x-elite\unet
-Expand-Archive -Path .\build\stable_diffusion_v2_1_w8a16\precompiled\qualcomm-snapdragon-x-elite\Stable-Diffusion-v2.1_vae_w8a16.onnx.zip -DestinationPath .\build\stable_diffusion_v2_1_w8a16\precompiled\qualcomm-snapdragon-x-elite
-mv .\build\stable_diffusion_v2_1_w8a16\precompiled\qualcomm-snapdragon-x-elite\job*optimized_onnx .\build\stable_diffusion_v2_1_w8a16\precompiled\qualcomm-snapdragon-x-elite\vae_decoder
+8. Extract the zip to `<APP ROOT>/model` directory. The expected directory structure is:
+```
+model/
+  |_ metadata.yaml
+  |_ text_encoder.onnx
+  |_ text_encoder_qairt_context.bin
+  |_ unet.onnx
+  |_ unet_qairt_context.bin
+  |_ vae.onnx
+  |_ vae_qairt_context.bin
 ```
 
-In the end, your `.\build` folder should look like this:
-```
-build\stable_diffusion_v2_1_w8a16\precompiled\qualcomm-snapdragon-x-elite\
-  text_encoder\
-    model.bin
-    model.onnx
-  unet\
-     model.bin
-     model.onnx
-  vae_decoder\
-     model.bin
-     model.onnx
-```
-
-
-
-8. Run demo:
+9. Run demo:
 
 ```powershell
 python demo.py --prompt "A girl taking a walk at sunset" --num-steps 20

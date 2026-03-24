@@ -1,0 +1,4 @@
+pytest
+mypy
+pre-commit
+boto3-stubs[s3] # for pre-commit

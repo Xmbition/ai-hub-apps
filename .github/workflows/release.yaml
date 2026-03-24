@@ -1,0 +1,33 @@
+name: Release QAI Hub Apps
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  approve:
+    name: Approve Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: release
+    steps:
+      - run: echo "Release approved"
+
+  release_code:
+      name: Release code to Repository
+      secrets: inherit
+      needs: [approve]
+      uses: ./.github/workflows/release_code.yaml
+      with:
+          skip_approval: true
+
+  sync_public_website:
+    name: Sync Public Website & Create Public Website PR
+    secrets: inherit
+    needs: [approve]
+    uses: ./.github/workflows/release_website.yaml
+    with:
+      source_branch_name: ${{ github.ref }}
+      dst_branch_name: ${{ format('dev/qaihm_bot-QCOM/qaiha_release/{0}', github.ref_name) }}
+      create_pr: true
+      import_models: false

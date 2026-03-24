@@ -1,6 +1,6 @@
 param (
     [string]$name = "AI_Hub",
-    [string]$python = "3.10"
+    [string]$python = "3.11"
 )
 
 # Check if conda is available
