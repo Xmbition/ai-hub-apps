@@ -1,21 +1,21 @@
 name: Object Detection Android
-id: Object Detection_android
+id: object_detection_android
 license_url: https://github.com/quic/ai-hub-apps/blob/main/LICENSE
 license_type: bsd-3-clause
 models: ['yolox']
 model_file_paths: ['src/main/assets/detector.tflite']
 runtime: tflite
-status: unpublished
+status: published
 domain: 'Computer Vision'
-headline: On-device image recognition with TFLite
-description: 'A sample app that classifies images and displays the top three predicted ImageNet classes, demonstrating the best practices for TFLite model inference on Android devices.'
+headline: On-device object detection with TFLite
+description: 'A sample Android app that detects and localizes objects in real time using live camera input, demonstrating best practices for integrating streaming camera, TFLite, and OpenCV for on-device AI inference.'
 precisions: [float]
 app_type: 'android'
-static_img_url: 'https://qaihub-public-assets.s3.us-west-2.amazonaws.com/qai-hub-apps/apps/image_classification_android/app_screen.png'
-app_repo_url: 'https://github.com/qualcomm/ai-hub-apps/tree/main/apps/android/ImageClassification'
+static_img_url: 'https://qaihub-public-assets.s3.us-west-2.amazonaws.com/qai-hub-apps/apps/object_detection_android/app_screen.png'
+app_repo_url: 'https://github.com/qualcomm/ai-hub-apps/tree/main/apps/android/ObjectDetection'
 os:
   name: Android
   version: 14+
 languages: ['Java']
-use_case: Image Classification
+use_case: Object Detection
 related_models: [yolox]
