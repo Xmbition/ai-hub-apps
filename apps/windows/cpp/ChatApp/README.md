@@ -26,7 +26,7 @@ The app demonstrates how to use the Genie APIs from [QAIRT SDK](https://qpm.qual
 1. Clone this repository so that you have a local copy of `ChatApp`.
 
 2. Please follow [this
-tutorial](https://github.com/quic/ai-hub-apps/tree/main/tutorials/llm_on_genie)
+tutorial](https://github.com/qualcomm/ai-hub-apps/tree/main/tutorials/llm_on_genie)
 to generate `genie_bundle` required by ChatApp. If you use any of the Llama 3
 models, the app will work without modifications. If you use another model, you
 will need to update the prompt format in `PromptHandler.cpp` first.
@@ -111,7 +111,7 @@ Make sure to provide paths to local config file and models using `\\` or `/` as 
 
 To use languages that require Unicode, please follow these instructions:
 
-* [UTF-8 support](https://github.com/quic/ai-hub-apps/blob/main/tutorials/llm_on_genie/powershell/README.md#utf-8-support)
+* [UTF-8 support](https://github.com/qualcomm/ai-hub-apps/blob/main/tutorials/llm_on_genie/powershell/README.md#utf-8-support)
 
 
 ### Sample Output

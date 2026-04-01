@@ -90,6 +90,6 @@ Note that if your job uses delegates other than QNN NPU, GPUv2, and TFLite, then
 
 This app is released under the [BSD-3 License](../../../LICENSE) found at the root of this repository.
 
-All models from [AI Hub Models](https://github.com/quic/ai-hub-models) are released under separate license(s). Refer to the [AI Hub Models repository](https://github.com/quic/ai-hub-models) for details on each model.
+All models from [AI Hub Models](https://github.com/qualcomm/ai-hub-models) are released under separate license(s). Refer to the [AI Hub Models repository](https://github.com/qualcomm/ai-hub-models) for details on each model.
 
 The QNN SDK dependency is also released under a separate license. Please refer to the LICENSE file downloaded with the SDK for details.

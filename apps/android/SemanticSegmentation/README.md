@@ -42,7 +42,7 @@ Comments have been left in [TFLiteHelpers.java](src/main/java/com/qualcomm/tflit
 | Classes | **CityScapes** Classes | [1, Height', Width', 19] | float32 lower resolution class logit predictions
 
 Refer to the CityScapes segmentation
-[model.py](https://github.com/quic/ai-hub-models/blob/main/qai_hub_models/models/_shared/cityscapes_segmentation/model.py)
+[model.py](https://github.com/qualcomm/ai-hub-models/tree/main/src/qai_hub_models/models/_shared/cityscapes_segmentation/model.py)
 for class label information.
 
 The app is developed to work best with a Width/Height ratio of 2.
@@ -85,6 +85,6 @@ When in doubt, point the camera at the following sample image to verify accuracy
 
 This app is released under the [BSD-3 License](../../../LICENSE) found at the root of this repository.
 
-All models from [AI Hub Models](https://github.com/quic/ai-hub-models) are released under separate license(s). Refer to the [AI Hub Models repository](https://github.com/quic/ai-hub-models) for details on each model.
+All models from [AI Hub Models](https://github.com/qualcomm/ai-hub-models) are released under separate license(s). Refer to the [AI Hub Models repository](https://github.com/qualcomm/ai-hub-models) for details on each model.
 
 The QNN SDK dependency is also released under a separate license. Please refer to the LICENSE file downloaded with the SDK for details.

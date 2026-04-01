@@ -1,6 +1,6 @@
 name: Object Detection Windows
 id: object_detection_windows
-license_url: https://github.com/quic/ai-hub-apps/blob/main/LICENSE
+license_url: https://github.com/qualcomm/ai-hub-apps/blob/main/LICENSE
 license_type: bsd-3-clause
 models: ['yolox']
 model_file_paths: ['/assets/models/detection.onnx']

@@ -35,11 +35,11 @@ on a prompt of your choosing.
 
 ## Genie Config
 
-Check out the [AI Hub Apps repository](https://github.com/quic/ai-hub-apps)
+Check out the [AI Hub Apps repository](https://github.com/qualcomm/ai-hub-apps)
 using Git:
 
 ```bash
-git clone https://github.com/quic/ai-hub-apps.git
+git clone https://github.com/qualcomm/ai-hub-apps.git
 ```
 
 Now run (replacing `llama_v3_8b_instruct` with the desired model id):

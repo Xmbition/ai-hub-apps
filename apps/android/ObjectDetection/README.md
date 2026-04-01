@@ -49,10 +49,10 @@ The app is developed to work best with a Width/Height ratio of 1.
 
 The app is currently compatible with the TFLite `float` variant of these models:
 
-- 91-class COCO  ([coco_labels_91.txt](https://github.com/quic/ai-hub-models/blob/main/qai_hub_models/labels/coco_labels_91.txt))
+- 91-class COCO  ([coco_labels_91.txt](https://github.com/qualcomm/ai-hub-models/tree/main/src/qai_hub_models/labels/coco_labels_91.txt))
   - [DETR-ResNet50](https://aihub.qualcomm.com/mobile/models/detr_resnet50)
   - [DETR-ResNet101](https://aihub.qualcomm.com/mobile/models/detr_resnet101)
-- 80-class COCO ([coco_labels.txt](https://github.com/quic/ai-hub-models/blob/main/qai_hub_models/labels/coco_labels.txt))
+- 80-class COCO ([coco_labels.txt](https://github.com/qualcomm/ai-hub-models/tree/main/src/qai_hub_models/labels/coco_labels.txt))
   - [Yolo-v3](https://aihub.qualcomm.com/mobile/models/yolov3)
   - [Yolo-v5](https://aihub.qualcomm.com/mobile/models/yolov5)
   - [Yolo-v6](https://aihub.qualcomm.com/mobile/models/yolov6)
@@ -83,6 +83,6 @@ Note that if your job uses delegates other than QNN NPU, GPUv2, and TFLite, then
 
 This app is released under the [BSD-3 License](../../../LICENSE) found at the root of this repository.
 
-All models from [AI Hub Models](https://github.com/quic/ai-hub-models) are released under separate license(s). Refer to the [AI Hub Models repository](https://github.com/quic/ai-hub-models) for details on each model.
+All models from [AI Hub Models](https://github.com/qualcomm/ai-hub-models) are released under separate license(s). Refer to the [AI Hub Models repository](https://github.com/qualcomm/ai-hub-models) for details on each model.
 
 The QNN SDK dependency is also released under a separate license. Please refer to the LICENSE file downloaded with the SDK for details.

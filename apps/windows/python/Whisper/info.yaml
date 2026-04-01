@@ -1,6 +1,6 @@
 name: Whisper Windows
 id: whisper_windows
-license_url: https://github.com/quic/ai-hub-apps/blob/main/LICENSE
+license_url: https://github.com/qualcomm/ai-hub-apps/blob/main/LICENSE
 license_type: bsd-3-clause
 runtime: onnx
 status: published

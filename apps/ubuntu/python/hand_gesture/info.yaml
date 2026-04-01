@@ -1,6 +1,6 @@
 name: MediaPipe Hand Gesture Recognition
 id: mediapipe_hand_gesture
-license_url: https://github.com/quic/ai-hub-apps/blob/main/LICENSE
+license_url: https://github.com/qualcomm/ai-hub-apps/blob/main/LICENSE
 license_type: bsd-3-clause
 runtime: tflite
 status: published

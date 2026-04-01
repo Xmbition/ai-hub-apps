@@ -1,6 +1,6 @@
 name: Stable Diffusion Windows
 id: stable_diffusion_windows
-license_url: https://github.com/quic/ai-hub-apps/blob/main/LICENSE
+license_url: https://github.com/qualcomm/ai-hub-apps/blob/main/LICENSE
 license_type: bsd-3-clause
 runtime: precompiled_qnn_onnx
 status: published

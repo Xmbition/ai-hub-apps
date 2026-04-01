@@ -21,7 +21,7 @@ There are three steps to run
 - **Step 1:** Install the [QAIRT SDK](https://softwarecenter.qualcomm.com/catalog/item/Qualcomm_AI_Runtime_Community) on the target device.
 - **Step 2:** Prepare models compatible with the QAIRT SDK on the host machine.
   - Get access to [Llama 3 weights from Hugging Face](https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct).
-  - Use [Qualcomm AI Hub Models](https://github.com/quic/ai-hub-models/tree/main/qai_hub_models/models) to export Llama 3 using [Qualcomm AI Hub](https://aihub.qualcomm.com/).
+  - Use [Qualcomm AI Hub Models](https://github.com/qualcomm/ai-hub-models/tree/main/src/qai_hub_models/models) to export Llama 3 using [Qualcomm AI Hub](https://aihub.qualcomm.com/).
 - **Step 3:** Run the LLM on the target device with an example prompt.
 
 > [!IMPORTANT]
@@ -55,7 +55,7 @@ used to compile the assets.  The QAIRT version is displayed on model cards (for
 pre-compiled models) in the [Qualcomm AI Hub model
 cards](https://aihub.qualcomm.com/models) or by clicking on the job links
 produced by the export scripts of the [Qualcomm AI Hub models python
-package](https://github.com/quic/ai-hub-models).
+package](https://github.com/qualcomm/ai-hub-models).
 
 Download the specific version of the QAIRT SDK from the [Qualcomm Software
 Center](https://softwarecenter.qualcomm.com/catalog/item/Qualcomm_AI_Runtime_Community)
@@ -148,7 +148,7 @@ For auto devices, once the SDK is installed, users need to copy additional libra
 ## Step 2: Export QAIRT-compatible LLM models (on the host machine)
 
 Export QAIRT-compatible models using the export scripts in
-[qai-hub-models](https://github.com/quic/ai-hub-models/tree/main/qai_hub_models/)
+[qai-hub-models](https://github.com/qualcomm/ai-hub-models/tree/main/src/qai_hub_models/)
 on the host machine (Linux, Windows, or macOS).
 
 > [!NOTE]
@@ -158,7 +158,7 @@ on the host machine (Linux, Windows, or macOS).
 
 ### Install Qualcomm AI Hub Models (on the host machine)
 
-Use [qai-hub-models](https://github.com/quic/ai-hub-models/tree/main/qai_hub_models/)
+Use [qai-hub-models](https://github.com/qualcomm/ai-hub-models/tree/main/src/qai_hub_models/)
 to adapt Hugging Face Llama models for on-device inference. Most models have
 open access and are downloaded automatically by the package.
 
@@ -227,8 +227,8 @@ bundle manually](manual_bundle.md).
 You have three options to run the LLM on device:
 
 - Option 1: Use the `genie-t2t-run` CLI command
-- Option 2: Use the [CLI Windows ChatApp](https://github.com/quic/ai-hub-apps/tree/main/apps/windows/cpp/ChatApp)
-- Option 3: Use the [Android ChatApp](https://github.com/quic/ai-hub-apps/tree/main/apps/android/ChatApp)
+- Option 2: Use the [CLI Windows ChatApp](https://github.com/qualcomm/ai-hub-apps/tree/main/apps/windows/cpp/ChatApp)
+- Option 3: Use the [Android ChatApp](https://github.com/qualcomm/ai-hub-apps/tree/main/apps/android/ChatApp)
 
 ### *Option 1*: Run Genie via `genie-t2t-run`
 
@@ -310,14 +310,14 @@ passing `--profile path_to_txt_file.txt` to `genie-t2t-run`.
 
 We provide a sample C++ app to show how to build an application using the Genie
 SDK. See the [CLI Windows
-ChatApp](https://github.com/quic/ai-hub-apps/tree/main/apps/windows/cpp/ChatApp)
+ChatApp](https://github.com/qualcomm/ai-hub-apps/tree/main/apps/windows/cpp/ChatApp)
 for more details.
 
 ### Option 3: Sample Android Chat App Powered by Genie SDK
 
 We provide a sample Android app (Java and C++) to show how to build an
 application using the Genie SDK for mobile. See [Android
-ChatApp](https://github.com/quic/ai-hub-apps/tree/main/apps/android/ChatApp) for
+ChatApp](https://github.com/qualcomm/ai-hub-apps/tree/main/apps/android/ChatApp) for
 more details.
 
 ## Additional Assistance
@@ -354,7 +354,7 @@ pip install -U "qai-hub-models[llama-v3.2-3b-instruct]"
 ```
 
 Replace `llama-v3.2-3b-instruct` with the desired Llama model from [AI Hub
-Models](https://github.com/quic/ai-hub-models/tree/main/qai_hub_models/models).
+Models](https://github.com/qualcomm/ai-hub-models/tree/main/src/qai_hub_models/models).
 Note to replace `_` with `-` (e.g., `llama_v3.2_3b_instruct` -> `llama-v3.2-3b-instruct`).
 
 
