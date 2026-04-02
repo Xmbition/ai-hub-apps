@@ -21,6 +21,7 @@ class GenieWrapper
   private:
     GenieDialogConfig_Handle_t m_config_handle = nullptr;
     GenieDialog_Handle_t m_dialog_handle = nullptr;
+    GenieProfile_Handle_t m_profile_handle = nullptr;
     std::string m_user_name;
     AppUtils::PromptHandler prompt_handler;
 

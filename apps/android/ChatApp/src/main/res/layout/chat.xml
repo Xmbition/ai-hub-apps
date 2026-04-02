@@ -10,7 +10,7 @@
         android:id="@+id/toolbar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@id/bottom_layout"
+        android:layout_above="@id/stats_bar"
         android:padding="10dp">
 
         <androidx.recyclerview.widget.RecyclerView
@@ -21,6 +21,20 @@
             tools:layout_editor_absoluteX="1dp"
             tools:layout_editor_absoluteY="1dp" />
     </RelativeLayout>
+
+    <TextView
+        android:id="@+id/stats_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/bottom_layout"
+        android:background="#CC000000"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:textColor="#FFFFFF"
+        android:textSize="12sp"
+        android:visibility="gone" />
 
     <RelativeLayout
         android:layout_width="match_parent"

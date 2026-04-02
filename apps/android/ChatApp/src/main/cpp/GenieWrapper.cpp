@@ -8,12 +8,14 @@
 #include <fstream>
 #include <iostream>
 #include <jni.h>
+#include <memory>
 #include <regex>
 
 #include "GenieCommon.h"
 #include "GenieDialog.h"
 #include "GenieWrapper.hpp"
 #include "PromptHandler.hpp"
+#include "json.hpp"
 
 using namespace App;
 
@@ -107,6 +109,20 @@ GenieWrapper::GenieWrapper(const std::string& model_config_path,
         throw std::runtime_error("Failed to create the Genie Dialog config. Please check config file.");
     }
 
+    // Create Genie profile handle
+    if (GENIE_STATUS_SUCCESS != GenieProfile_create(nullptr, &m_profile_handle))
+    {
+        __android_log_print(ANDROID_LOG_ERROR, "ChatApp", "Failed to create Genie profile handler.");
+        throw std::runtime_error("Failed to create the Genie profile handler.");
+    }
+
+    // Bind Profile Handle to Dialog Config
+    if (GENIE_STATUS_SUCCESS != GenieDialogConfig_bindProfiler(m_config_handle, m_profile_handle))
+    {
+        __android_log_print(ANDROID_LOG_ERROR, "ChatApp", "Failed to bind Genie profiler tot dialog config.");
+        throw std::runtime_error("Failed to bind the Genie Profiler to Dialog config.");
+    }
+
     // Create Genie dialog handle
     if (GENIE_STATUS_SUCCESS != GenieDialog_create(m_config_handle, &m_dialog_handle))
     {
@@ -132,6 +148,15 @@ GenieWrapper::~GenieWrapper()
         {
             __android_log_print(ANDROID_LOG_ERROR, "ChatApp", "Failed to free Genie dialog handler.");
             std::cerr << "Failed to free the Genie dialog handler.";
+        }
+    }
+
+    if (m_profile_handle != nullptr)
+    {
+        if (GENIE_STATUS_SUCCESS != GenieProfile_free(m_profile_handle))
+        {
+            __android_log_print(ANDROID_LOG_ERROR, "ChatApp", "Failed to free Genie profile handler.");
+            std::cerr << "Failed to free the Genie profile handler.";
         }
     }
 }
@@ -174,6 +199,50 @@ std::string GenieWrapper::GetResponseForPrompt(const std::string& user_prompt,
         {
             __android_log_print(ANDROID_LOG_INFO, "ChatApp", "Error getting response from Genie.");
             throw std::runtime_error("Failed to get response from GenieDialog. Please restart Chat.");
+        }
+    }
+
+    char* rawJson = nullptr;
+    const Genie_AllocCallback_t alloc_callback([](size_t size, const char** out)
+                                               { *out = static_cast<char*>(std::malloc(size)); });
+
+    auto profileStatus = GenieProfile_getJsonData(m_profile_handle, alloc_callback, (const char**)&rawJson);
+    std::unique_ptr<char, decltype(&std::free)> jsonData(rawJson, &std::free);
+
+    if (GENIE_STATUS_SUCCESS != profileStatus)
+    {
+        __android_log_print(ANDROID_LOG_WARN, "ChatApp", "Failed to get profiler data from Genie.");
+        return user_data.data;
+    }
+
+    if (jsonData != nullptr)
+    {
+        using namespace nlohmann;
+
+        json j = json::parse(jsonData.get());
+
+        for (const auto& component : j["components"])
+        {
+
+            for (const auto& event : component["events"])
+            {
+                auto duration = event["duration"].get<int>();
+
+                // Optional metrics — check before accessing
+                if (event.contains("time-to-first-token"))
+                {
+                    auto ttft = event["time-to-first-token"]["value"].get<int>();
+                    auto unit = event["time-to-first-token"]["unit"].get<std::string>();
+                    __android_log_print(ANDROID_LOG_INFO, "ChatApp", "TTFT: %d %s", ttft, unit.c_str());
+                }
+
+                if (event.contains("token-generation-rate"))
+                {
+                    auto tps = event["token-generation-rate"]["value"].get<int>();
+                    auto unit = event["token-generation-rate"]["unit"].get<std::string>();
+                    __android_log_print(ANDROID_LOG_INFO, "ChatApp", "TPS: %d %s", tps, unit.c_str());
+                }
+            }
         }
     }
     return user_data.data;

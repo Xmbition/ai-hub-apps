@@ -11,6 +11,14 @@ cmake_minimum_required(VERSION 3.22.1)
 # build script scope).
 project("chatapp")
 
+# Download nlohmann/json single-header at configure time if not already present
+if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/json.hpp)
+    file(DOWNLOAD
+        https://raw.githubusercontent.com/nlohmann/json/55f93686c01528224f448c19128836e7df245f72/single_include/nlohmann/json.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/json.hpp
+    )
+endif()
+
 set(GENIE_HEADERS_PATH "${QNN_SDK_ROOT_PATH}/include/Genie")
 set(GENIE_LIB_PATH "${QNN_SDK_ROOT_PATH}/lib/aarch64-android/libGenie.so")
 
