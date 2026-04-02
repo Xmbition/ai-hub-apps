@@ -7,9 +7,9 @@ import os
 
 import numpy as np
 import onnxruntime
-from diffusers import EulerDiscreteScheduler
 from PIL import Image
 from qai_hub_models.models._shared.stable_diffusion.app import StableDiffusionApp
+from qai_hub_models.models._shared.stable_diffusion.model import make_scheduler
 from qai_hub_models.utils.args import add_output_dir_arg
 from qai_hub_models.utils.display import display_or_save_image, to_uint8
 from qai_hub_models.utils.onnx.torch_wrapper import OnnxModelTorchWrapper
@@ -73,7 +73,7 @@ def main():
         OnnxModelTorchWrapper.OnNPU(args.vae_decoder),
         OnnxModelTorchWrapper.OnNPU(args.unet),
         CLIPTokenizer.from_pretrained(HF_REPO, subfolder="tokenizer"),
-        EulerDiscreteScheduler.from_pretrained(HF_REPO, subfolder="scheduler"),
+        make_scheduler(HF_REPO, subfolder="scheduler"),
         channel_last_latent=True,
     )
 
