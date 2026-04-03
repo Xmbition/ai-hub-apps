@@ -29,8 +29,8 @@ description: A sample CLI app demonstrating how to integrate an on-device LLM wi
 precisions: [w4]
 app_type: 'windows'
 qaihm_version: 'v0.41.0'
-static_img_url: 'https://qaihub-public-assets.s3.us-west-2.amazonaws.com/qai-hub-apps/apps/chatapp_windows/app_screen.png'
-app_repo_url: 'https://github.com/qualcomm/ai-hub-apps/tree/main/apps/windows/cpp/ChatApp'
+static_img_filename: 'app_screen.png'
+app_repo_relative_path: 'windows/cpp/ChatApp'
 os:
   name: Windows
   version: 11+

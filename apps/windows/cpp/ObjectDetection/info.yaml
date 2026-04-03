@@ -11,8 +11,8 @@ headline: 'Accelerated object detection with YOLO-X'
 description: 'A sample CLI app for Windows that runs YOLO-X via ONNX Runtime leveraging the QNN execution provider to perform efficient object detection.'
 precisions: [float]
 app_type: 'windows'
-static_img_url: 'https://qaihub-public-assets.s3.us-west-2.amazonaws.com/qai-hub-apps/apps/object_detection_windows/app_screen.png'
-app_repo_url: 'https://github.com/qualcomm/ai-hub-apps/tree/main/apps/windows/cpp/ObjectDetection'
+static_img_filename: 'app_screen.png'
+app_repo_relative_path: 'windows/cpp/ObjectDetection'
 os:
   name: Windows
   version: 11+

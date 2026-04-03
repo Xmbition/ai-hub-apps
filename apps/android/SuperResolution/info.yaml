@@ -11,8 +11,8 @@ headline: 'Upscale images efficiently with TFLite'
 description: 'A sample Android app that creates upscaled images, demonstrating best practices for TFLite model inference with a simple and interactive workflow.'
 precisions: [float]
 app_type: 'android'
-static_img_url: 'https://qaihub-public-assets.s3.us-west-2.amazonaws.com/qai-hub-apps/apps/super_resolution_android/app_screen.png'
-app_repo_url: 'https://github.com/qualcomm/ai-hub-apps/tree/main/apps/android/SuperResolution'
+static_img_filename: 'app_screen.png'
+app_repo_relative_path: 'android/SuperResolution'
 os:
   name: Android
   version: 14+

@@ -115,6 +115,17 @@ jobs:
             with:
               node-version: ${{ env.NODE_VERSION }}
 
+          - name: Resolve ZOO_APP_REF
+            run: |
+              ref="${{ inputs.source_branch_name }}"
+              if [[ -z "$ref" ]]; then
+                echo "ZOO_APP_REF=" >> "$GITHUB_ENV"
+              elif [[ "$ref" == refs/* ]]; then
+                echo "ZOO_APP_REF=$ref" >> "$GITHUB_ENV"
+              else
+                echo "ZOO_APP_REF=refs/heads/$ref" >> "$GITHUB_ENV"
+              fi
+
           - name: Website Import
             working-directory: tetra-public-website
             # we have to run both models and apps import as app import depends on model card ids. No need to verify jobs, ai-hub-models will take care of it.

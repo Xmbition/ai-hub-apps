@@ -11,8 +11,8 @@ headline: On-device object detection with TFLite
 description: 'A sample Android app that detects and localizes objects in real time using live camera input, demonstrating best practices for integrating streaming camera, TFLite, and OpenCV for on-device AI inference.'
 precisions: [float]
 app_type: 'android'
-static_img_url: 'https://qaihub-public-assets.s3.us-west-2.amazonaws.com/qai-hub-apps/apps/object_detection_android/app_screen.png'
-app_repo_url: 'https://github.com/qualcomm/ai-hub-apps/tree/main/apps/android/ObjectDetection'
+static_img_filename: 'app_screen.png'
+app_repo_relative_path: 'android/ObjectDetection'
 os:
   name: Android
   version: 14+

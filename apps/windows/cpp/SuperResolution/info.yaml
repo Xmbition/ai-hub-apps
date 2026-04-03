@@ -11,8 +11,8 @@ headline: 'High-performance image enhancement on Snapdragon® NPUs'
 description: 'A sample CLI app for Windows integrating the XLSR model via ONNX Runtime. It highlights how the QNN execution provider accelerates image processing.'
 precisions: [float]
 app_type: 'windows'
-static_img_url: 'https://qaihub-public-assets.s3.us-west-2.amazonaws.com/qai-hub-apps/apps/super_resolution_windows/app_screen.png'
-app_repo_url: 'https://github.com/qualcomm/ai-hub-apps/tree/main/apps/windows/cpp/SuperResolution'
+static_img_filename: 'app_screen.png'
+app_repo_relative_path: 'windows/cpp/SuperResolution'
 os:
   name: Windows
   version: 11+

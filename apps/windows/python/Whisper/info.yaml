@@ -9,8 +9,8 @@ headline: 'Bring speech-to-text on device for Windows'
 description: 'A sample CLI app demonstrating how to run Whisper, a state-of-the-art speech-to-text solution, using the ONNX execution provider. Designed for learning, it showcases efficient on-device processing optimized for the Snapdragon® Neural Processing Unit (NPU).'
 precisions: [float]
 app_type: 'windows'
-static_img_url: 'https://qaihub-public-assets.s3.us-west-2.amazonaws.com/qai-hub-apps/apps/whisper_windows/app_screen.png'
-app_repo_url: 'https://github.com/qualcomm/ai-hub-apps/tree/main/apps/windows/python/Whisper'
+static_img_filename: 'app_screen.png'
+app_repo_relative_path: 'windows/python/Whisper'
 os:
   name: Windows
   version: 11+

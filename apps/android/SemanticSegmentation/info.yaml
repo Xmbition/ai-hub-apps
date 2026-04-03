@@ -11,8 +11,8 @@ headline: 'Learn real-time image processing with TFLite and OpenCV'
 description: 'A sample Android app demonstrating semantic segmentation on live camera input, showcasing the integration of streaming camera, TFLite, and OpenCV. It provides a practical example of AI-powered image analysis in real time.'
 precisions: [float]
 app_type: 'android'
-static_img_url: 'https://qaihub-public-assets.s3.us-west-2.amazonaws.com/qai-hub-apps/apps/semantic_segmentation_android/app_screen.png'
-app_repo_url: 'https://github.com/qualcomm/ai-hub-apps/tree/main/apps/android/SemanticSegmentation'
+static_img_filename: 'app_screen.png'
+app_repo_relative_path: 'android/SemanticSegmentation'
 os:
   name: Android
   version: 14+
