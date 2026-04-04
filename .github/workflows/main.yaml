@@ -38,8 +38,8 @@ jobs:
 
           paths_ignore: '["**/*.md", "playgrounds/**"]'
 
-          # always include scripts and github
-          paths: '["scripts/**", ".github/**"]'
+          # always include tools and github
+          paths: '["tools/**", ".github/**"]'
 
   build-and-test-workflow:
     name: B&T

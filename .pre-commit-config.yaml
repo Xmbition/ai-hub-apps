@@ -81,5 +81,6 @@ repos:
         - id: mypy
           name: mypy
           files: \.(py|pyi|ipynb|proto|fbs)$
-          entry: scripts/util/run_mypy.sh
+          entry: bash -c 'mypy --ignore-missing-imports --explicit-package-bases --warn-unused-configs --config-file=mypy.ini apps/'
           language: system
+          pass_filenames: false

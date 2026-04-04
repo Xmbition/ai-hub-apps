@@ -78,7 +78,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
-          file: ./scripts/ci/docker/android_builder.dockerfile
+          file: ./tools/ci/docker/android_builder.dockerfile
           push: true
           tags: ghcr.io/${{ github.repository }}/android_builder:${{ steps.tag.outputs.image_tag }}
           cache-from: type=gha,scope=android_builder
@@ -115,7 +115,7 @@ jobs:
       - name: Install Python Deps
         id: install_deps
         run: |
-          python3 scripts/build_and_test.py --venv $VENV_PATH install_deps
+          bash tools/setup_env.sh --venv $VENV_PATH
 
       - name: Configure Hub Credentials
         id: set_hub_creds
@@ -127,7 +127,7 @@ jobs:
       - name: Run Tests
         id: run_tests
         run: |
-          source "$VENV_PATH/bin/activate" && python -m pytest --pyargs qai_hub_apps.test.test_apps -s -vv -k android
+          source "$VENV_PATH/bin/activate" && python -m pytest --pyargs qai_hub_apps_test.test.test_apps -s -vv -k android
 
   delete_temporary_container_tag:
     name: Delete Temporary Container Tag

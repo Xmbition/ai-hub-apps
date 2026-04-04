@@ -77,7 +77,7 @@ jobs:
           DOCKER_BUILDKIT: 0
         run: |
           docker build `
-            -f ./scripts/ci/docker/windows_builder.dockerfile `
+            -f ./tools/ci/docker/windows_builder.dockerfile `
             -t ghcr.io/${{ github.repository }}/windows_builder:${{ steps.tag.outputs.image_tag }} `
             .
           docker push ghcr.io/${{ github.repository }}/windows_builder:${{ steps.tag.outputs.image_tag }}
@@ -134,7 +134,7 @@ jobs:
           -v "$env:GITHUB_WORKSPACE`:C:\Code" `
           -v "$awsDir`:C:\aws" `
           -w C:\Code `
-            win_ci -File scripts\ci\windows\prep_run_tests.ps1;
+            win_ci -File tools\ci\windows\prep_run_tests.ps1;
 
   delete_temporary_container_tag:
     name: Delete Temporary Container Tag

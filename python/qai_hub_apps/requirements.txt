@@ -1,6 +1,0 @@
-qai_hub_models==0.42.0
-typed-argument-parser
-platformdirs
-boto3 # for fetching test assets
-botocore # for fetching test assets
-tqdm>=4.66 # for fetching test assets
