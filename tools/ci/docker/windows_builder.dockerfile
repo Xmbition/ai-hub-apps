@@ -6,7 +6,7 @@ FROM mcr.microsoft.com/windows/servercore:ltsc2022
 # Restore the default Windows shell for correct batch processing.
 SHELL ["cmd", "/S", "/C"]
 
-COPY ./scripts/ci/.vsconfig C:\\.vsconfig
+COPY ./tools/ci/windows/.vsconfig C:\\.vsconfig
 
 RUN `
     # Download the Build Tools bootstrapper.
