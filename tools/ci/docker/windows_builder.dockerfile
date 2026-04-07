@@ -53,6 +53,12 @@ RUN `
     && start /wait msiexec.exe /i AWSCLIV2.msi /qn /norestart `
     && del /q AWSCLIV2.msi
 
+# Install Git
+RUN `
+    curl -L -o git-installer.exe https://github.com/git-for-windows/git/releases/download/v2.49.0.windows.1/Git-2.49.0-64-bit.exe `
+    && start /wait git-installer.exe /VERYSILENT /NORESTART /NOCANCEL /SP- /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS /COMPONENTS="icons,ext\reg\shellhere,assoc,assoc_sh" `
+    && del /q git-installer.exe
+
 RUN setx PATH "%TOOLS_HOME%;%PATH%"
 
 COPY apps/versions.yaml $WORKSPACE/versions.yaml
