@@ -155,12 +155,13 @@ jobs:
       # Send result to Slack channel #ai-hub-apps
       - name: Send Slack Notification
         id: slack_notification
-        uses: slackapi/slack-github-action@v1.25.0
+        uses: slackapi/slack-github-action@v3.0.1
         with:
-          channel-id: C08KWAVBQNB
-          slack-message: |
-            🚨 QAI Hub Apps Nightly Failed
-            Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}
-            GitHub Issue: ${{ steps.create-github-issue.outputs.issue_url }}
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFIER_TOKEN }}
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_NOTIFIER_TOKEN }}
+          payload: |
+            channel: "C08KWAVBQNB"
+            text: |
+              🚨 QAI Hub Apps Nightly Failed
+              Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}
+              GitHub Issue: ${{ steps.create-github-issue.outputs.issue_url }}
