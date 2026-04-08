@@ -227,8 +227,8 @@ bundle manually](manual_bundle.md).
 You have three options to run the LLM on device:
 
 - Option 1: Use the `genie-t2t-run` CLI command
-- Option 2: Use the [CLI Windows ChatApp](https://github.com/qualcomm/ai-hub-apps/tree/main/apps/windows/cpp/ChatApp)
-- Option 3: Use the [Android ChatApp](https://github.com/qualcomm/ai-hub-apps/tree/main/apps/android/ChatApp)
+- Option 2: Use the [CLI Windows ChatApp](https://github.com/qualcomm/ai-hub-apps/tree/main/apps/chatapp_windows_cpp)
+- Option 3: Use the [Android ChatApp](https://github.com/qualcomm/ai-hub-apps/tree/main/apps/chatapp_android)
 
 ### *Option 1*: Run Genie via `genie-t2t-run`
 
@@ -310,14 +310,14 @@ passing `--profile path_to_txt_file.txt` to `genie-t2t-run`.
 
 We provide a sample C++ app to show how to build an application using the Genie
 SDK. See the [CLI Windows
-ChatApp](https://github.com/qualcomm/ai-hub-apps/tree/main/apps/windows/cpp/ChatApp)
+ChatApp](https://github.com/qualcomm/ai-hub-apps/tree/main/apps/chatapp_windows_cpp)
 for more details.
 
 ### Option 3: Sample Android Chat App Powered by Genie SDK
 
 We provide a sample Android app (Java and C++) to show how to build an
 application using the Genie SDK for mobile. See [Android
-ChatApp](https://github.com/qualcomm/ai-hub-apps/tree/main/apps/android/ChatApp) for
+ChatApp](https://github.com/qualcomm/ai-hub-apps/tree/main/apps/chatapp_android) for
 more details.
 
 ## Additional Assistance

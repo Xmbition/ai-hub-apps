@@ -50,28 +50,29 @@ __NOTE: Some of these apps will run without NPU acceleration on non-Snapdragon®
 
 | Task | Language | Inference API | Special Tags |
 | -- | -- | -- | -- |
-| [ChatApp](apps/android/ChatApp) | Java/C++ | Genie SDK | LLM, GenAI |
-| [Image Classification](apps/android/ImageClassification) | Java | TensorFlow Lite |
-| [Semantic Segmentation](apps/android/SemanticSegmentation) |  Java | TensorFlow Lite | OpenCV, Live Camera Feed |
-| [Super Resolution](apps/android/SuperResolution) | Java | TensorFlow Lite |
+| [ChatApp](apps/chatapp_android) | Java/C++ | Genie SDK | LLM, GenAI |
+| [Image Classification](apps/image_classification_android) | Java | TensorFlow Lite |
+| [Object Detection](apps/object_detection_android) | Java | TensorFlow Lite | OpenCV, Live Camera Feed |
+| [Semantic Segmentation](apps/semantic_segmentation_android) |  Java | TensorFlow Lite | OpenCV, Live Camera Feed |
+| [Super Resolution](apps/super_resolution_android) | Java | TensorFlow Lite |
 | [WhisperKit (Speech to Text)](https://github.com/argmaxinc/WhisperKitAndroid) | Various | TensorFlow Lite |
 
 ## _Windows_ App Directory
 
 | Task | Language | Inference API | Special Tags |
 | -- | -- | -- | -- |
-| [ChatApp](apps/windows/cpp/ChatApp) | C++ | Genie SDK | LLM, GenAI |
-| [Image Classification](apps/windows/cpp/Classification) | C++ | ONNX | OpenCV |
-| [Object Detection](apps/windows/cpp/ObjectDetection) | C++ | ONNX | OpenCV |
-| [Super Resolution](apps/windows/cpp/SuperResolution) | C++ | ONNX | OpenCV |
-| [Whisper Speech-to-Text](apps/windows/python/Whisper) | Python | ONNX |
-| [Stable Diffusion Image Generation](apps/windows/python/StableDiffusion) | Python | ONNX |
+| [ChatApp](apps/chatapp_windows_cpp) | C++ | Genie SDK | LLM, GenAI |
+| [Image Classification](apps/image_classification_windows_cpp) | C++ | ONNX | OpenCV |
+| [Object Detection](apps/object_detection_windows_cpp) | C++ | ONNX | OpenCV |
+| [Super Resolution](apps/super_resolution_windows_cpp) | C++ | ONNX | OpenCV |
+| [Whisper Speech-to-Text](apps/whisper_windows_py) | Python | ONNX |
+| [Stable Diffusion Image Generation](apps/stable_diffusion_windows_py) | Python | ONNX |
 
 ## _Ubuntu_ App Directory
 
 | Task | Language | Inference API | Special Tags |
 | -- | -- | -- | -- |
-| [Hand Gesture Recognition](apps/ubuntu/python/hand_gesture) | Python | TensorFlow Lite | GStreamer |
+| [Hand Gesture Recognition](apps/mediapipe_hand_gesture_ubuntu) | Python | TensorFlow Lite | GStreamer |
 
 ## _Tutorials_ Directory
 

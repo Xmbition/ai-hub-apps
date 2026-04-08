@@ -67,7 +67,7 @@ Follow these steps to configure QAIRT SDKs for ChatApp:
 1. Go to ChatApp directory
 
 ```bash
-cd <ai-hub-apps-repo-root>/apps/android/ChatApp/
+cd <ai-hub-apps-repo-root>/apps/chatapp_android/
 ```
 
 2. Get QNN context binaries for the LLM of your choice from Qualcomm AI Hub. There are two ways to get these assets:
@@ -129,7 +129,7 @@ cd <ai-hub-apps-repo-root>/apps/android/ChatApp/
 
     - If your model is Llama 3.2 3B, you do not need to set up the `genie_config.json` and the HTP config. These files are already set up for you.
 
-6. Update the text in `apps/android/ChatApp/src/main/res/values/strings.xml` to display the model you would like to chat with in the application. If you are using Llama 3.2 3B, it may look like this:
+6. Update the text in `apps/chatapp_android/src/main/res/values/strings.xml` to display the model you would like to chat with in the application. If you are using Llama 3.2 3B, it may look like this:
 
     ```code
     <string name="chat_with_llm">Chat with Llama 3.2 3B</string>
@@ -137,7 +137,7 @@ cd <ai-hub-apps-repo-root>/apps/android/ChatApp/
 
     - If you are using a model that is not one of the Llama 3 models, you will have to update the prompt format in `PromptHandler.cpp` first. Check out the Prompt Formats section in the [LLM On-Device Deployment tutorial](https://github.com/qualcomm/ai-hub-apps/tree/main/tutorials/llm_on_genie#prompt-formats) to learn more.
 
-7. Update `<ai-hub-apps-repo-root>/apps/android/ChatApp/build.gradle` with path to QNN SDK root directory, or set the environment variable "QAIRT_SDK_ROOT" to the QNN SDK root directory. If you are on QNN version 2.28.2 and have extracted to the default location on Linux, it may look like this:
+7. Update `<ai-hub-apps-repo-root>/apps/chatapp_android/build.gradle` with path to QNN SDK root directory, or set the environment variable "QAIRT_SDK_ROOT" to the QNN SDK root directory. If you are on QNN version 2.28.2 and have extracted to the default location on Linux, it may look like this:
 
     ```code
     def qnnSDKLocalPath="/opt/qcom/aistack/qairt/2.28.2.241116"
@@ -151,7 +151,7 @@ cd <ai-hub-apps-repo-root>/apps/android/ChatApp/
     - You can find `APK` at the following path
 
     ```text
-    <ai-hub-apps-repo-root>/apps/android/ChatApp/build/outputs/apk/{build_type}/
+    <ai-hub-apps-repo-root>/apps/chatapp_android/build/outputs/apk/{build_type}/
     # here {build_type} can be either `release` or `debug`
     ```
 
