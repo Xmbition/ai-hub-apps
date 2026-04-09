@@ -5,6 +5,7 @@
 from pathlib import Path
 
 import pytest
+
 from qai_hub_apps_test.configs.info_yaml import QAIHAAppInfo
 from qai_hub_apps_test.configs.versions_yaml import VersionsRegistry
 from qai_hub_apps_test.scripts.build_and_verify_app import (
@@ -15,25 +16,26 @@ from qai_hub_apps_test.scripts.build_and_verify_app import (
 from qai_hub_apps_test.test.helpers import path_idfn
 from qai_hub_apps_test.utils.models.verify_model import verify_model_asset_is_compatible
 from qai_hub_apps_test.utils.paths import get_all_apps
+from qai_hub_apps_test.utils.verify_result import VerifyResult
 
 
-def skip_if_requested(app_info: QAIHAAppInfo):
+def skip_if_requested(app_info: QAIHAAppInfo) -> None:
     if app_info.skip_test:
         pytest.skip(
             f'Skipping {app_info.name} as requested due to "{app_info.skip_test}"'
         )
 
 
-def assert_verify_result(verify_result) -> None:
-    assert (
-        not verify_result.has_errors
-    ), f"App verification has errors:\n{verify_result.pretty_errors}"
+def assert_verify_result(verify_result: VerifyResult) -> None:
+    assert not verify_result.has_errors, (
+        f"App verification has errors:\n{verify_result.pretty_errors}"
+    )
     if verify_result.has_warnings:
         print(f"App verification has warnings:\n: {verify_result.pretty_warnings}")
 
 
 @pytest.mark.parametrize("app_dir", get_all_apps(), ids=path_idfn)
-def test_verify_apps(app_dir: Path):
+def test_verify_apps(app_dir: Path) -> None:
     app_info, app_root = QAIHAAppInfo.from_app(app_dir)
 
     skip_if_requested(app_info)
@@ -54,7 +56,7 @@ def test_verify_apps(app_dir: Path):
 
 
 @pytest.mark.parametrize("app_dir", get_all_apps(), ids=path_idfn)
-def test_build_apps(app_dir: Path):
+def test_build_apps(app_dir: Path) -> None:
     app_info, app_root = QAIHAAppInfo.from_app(app_dir)
 
     skip_if_requested(app_info)

@@ -6,19 +6,22 @@ import os
 import subprocess
 from pathlib import Path
 
+from qai_hub_models.models.common import Precision
+from qai_hub_models.scorecard.device import ScorecardDevice
+
 from qai_hub_apps_test.configs.info_yaml import QAIHAAppInfo
 from qai_hub_apps_test.configs.versions_yaml import VersionsRegistry
 from qai_hub_apps_test.utils.models.install_model import install_model
 from qai_hub_apps_test.utils.verify_result import VerifyResult
-from qai_hub_models.models.common import Precision
-from qai_hub_models.scorecard.device import ScorecardDevice
 
 
 def verify_windows_app_versions_match(
     app_root: str | os.PathLike,
     app_info: QAIHAAppInfo,
-    versions: VersionsRegistry = VersionsRegistry.load(),
+    versions: VersionsRegistry | None = None,
 ) -> VerifyResult:
+    if versions is None:
+        versions = VersionsRegistry.load()
     """
     Verifies that the Windows app at the given root directory
     uses the same versions of runtimes as are listed in the versions yaml.
@@ -35,8 +38,8 @@ def verify_windows_app_versions_match(
     VerifyResult
         The warnings and errors produced by this verification process.
     """
-    errors = []
-    warnings = []
+    errors: list[str] = []
+    warnings: list[str] = []
     # TODO: check version for VS build tools?
     return VerifyResult(errors, warnings)
 
@@ -49,7 +52,7 @@ def build_windows_app(
     device: ScorecardDevice | None = None,
     qaihm_version_tag: str | None = None,
     clean_build: bool = False,
-):
+) -> None:
     """
     Builds a Windows application using the specified configuration and model parameters.
 
@@ -75,9 +78,9 @@ def build_windows_app(
     precision = precision or app_info.precisions[0]
 
     # Note: msbuild is only recognizable inside a VS Dev command prompt or load VSDevCmd.bat before building/cleaning
-    assert os.getenv(
-        "VSDEV_CMD"
-    ), "Couldn't find VS Dev Command prompt, $VSDEV_CMD should be set to path of VSDevCmd.bat batch file"
+    assert os.getenv("VSDEV_CMD"), (
+        "Couldn't find VS Dev Command prompt, $VSDEV_CMD should be set to path of VSDevCmd.bat batch file"
+    )
 
     # Build the app
     if clean_build:
@@ -94,21 +97,21 @@ def build_windows_app(
     )
 
     subprocess.run(
-        f"\"{os.environ['VSDEV_CMD']}\" && msbuild -t:restore -p:RestorePackagesConfig=true",
+        f'"{os.environ["VSDEV_CMD"]}" && msbuild -t:restore -p:RestorePackagesConfig=true',
         cwd=app_root,
         text=True,
         shell=True,
         check=True,
     )
     subprocess.run(
-        f"\"{os.environ['VSDEV_CMD']}\" && vcpkg integrate install",
+        f'"{os.environ["VSDEV_CMD"]}" && vcpkg integrate install',
         cwd=app_root,
         text=True,
         shell=True,
         check=True,
     )
     subprocess.run(
-        f"\"{os.environ['VSDEV_CMD']}\" && msbuild ",
+        f'"{os.environ["VSDEV_CMD"]}" && msbuild ',
         cwd=app_root,
         text=True,
         shell=True,
@@ -118,7 +121,7 @@ def build_windows_app(
 
 def clean_windows_app(
     app_root: str | os.PathLike,
-):
+) -> None:
     # TODO: add custom Target for cleanup through msbuild
     for dir_ in ["ARM64", "packages", "vcpkg_installed", os.path.basename(app_root)]:
         subprocess.run(

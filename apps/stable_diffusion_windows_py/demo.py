@@ -22,7 +22,7 @@ DEFAULT_PROMPT = "A girl taking a walk at sunset"
 HF_REPO = "sd2-community/stable-diffusion-2-1"
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         conflict_handler="error",

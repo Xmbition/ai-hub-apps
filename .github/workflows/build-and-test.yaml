@@ -44,7 +44,7 @@ jobs:
     if: ${{ inputs.do_all || inputs.do_precommit }}
     runs-on: [tetra-ubuntu-2204, self-hosted]
     env:
-      VENV_PATH: build/ci-envs/precommit-check
+      VENV_PATH: qaiha-dev
     steps:
     - uses: actions/checkout@v6
     - id: setup_python

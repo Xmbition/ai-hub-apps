@@ -9,15 +9,16 @@ from tempfile import TemporaryDirectory
 from zipfile import Path as ZipFilePath
 from zipfile import ZipFile, is_zipfile
 
+from qai_hub_models.models.common import Precision, TargetRuntime
+from qai_hub_models.scorecard.device import ScorecardDevice
+from qai_hub_models.utils.fetch_static_assets import fetch_static_assets
+
 from qai_hub_apps_test.configs.info_yaml import QAIHAAppInfo
 from qai_hub_apps_test.utils.aws import (
     QAIHM_PRIVATE_S3_BUCKET,
     get_qaihm_s3,
     s3_download,
 )
-from qai_hub_models.models.common import Precision, TargetRuntime
-from qai_hub_models.scorecard.device import ScorecardDevice
-from qai_hub_models.utils.fetch_static_assets import fetch_static_assets
 
 
 def install_model(
@@ -83,7 +84,7 @@ def install_model(
                 model_id,
                 runtime,
                 precision,
-                device.reference_device,
+                device.reference_device if device is not None else None,
                 qaihm_version_tag=qaihm_version_tag,
                 output_folder=tmpdir,
             )[0]
@@ -98,16 +99,16 @@ def install_model(
                 f"Expected {len(dst_paths)} files for model {model_id}, but got {len(paths)} files."
             )
 
-        for src_path, relative_dst_path in zip(paths, dst_paths):
-            dst_path = Path(app_root) / relative_dst_path
-            if os.path.exists(dst_path):
-                if os.path.isdir(dst_path):
-                    shutil.rmtree(dst_path)
+        for src_path, relative_dst_path in zip(paths, dst_paths, strict=False):
+            install_dst = Path(app_root) / relative_dst_path
+            if os.path.exists(install_dst):
+                if os.path.isdir(install_dst):
+                    shutil.rmtree(install_dst)
                 else:
-                    os.remove(dst_path)
+                    os.remove(install_dst)
 
             if is_zipfile(filename=src_path):
-                # Unzip contents to the dst_path
+                # Unzip contents to the install_dst
                 zip_extract_dir = Path(str(src_path) + ".extracted")
                 with ZipFile(src_path) as zipfile:
                     top_level_entries = list(ZipFilePath(zipfile).iterdir())
@@ -118,23 +119,23 @@ def install_model(
                         #      ↳ zip_root_folder
                         #         ↳ all zip contents
                         #
-                        # This will move `zip_root_folder` to `dst_path` (which is defined by the above for loop).
+                        # This will move `zip_root_folder` to `install_dst` (which is defined by the above for loop).
                         shutil.move(
-                            zip_extract_dir / top_level_entries[0].name, dst_path
+                            zip_extract_dir / top_level_entries[0].name, install_dst
                         )
                     else:
-                        # Otherwise, just move everything in the zip file into the target folder (dst_path)
-                        os.makedirs(dst_path)
+                        # Otherwise, just move everything in the zip file into the target folder (install_dst)
+                        os.makedirs(install_dst)
                         for entry in top_level_entries:
                             shutil.move(
-                                zip_extract_dir / entry.name, dst_path / entry.name
+                                zip_extract_dir / entry.name, install_dst / entry.name
                             )
 
                 shutil.rmtree(zip_extract_dir)
             else:
-                if os.path.exists(dst_path):
-                    os.remove(dst_path)
-                dst_path.parent.mkdir(exist_ok=True, parents=True)
-                shutil.move(src_path, dst_path)
+                if os.path.exists(install_dst):
+                    os.remove(install_dst)
+                install_dst.parent.mkdir(exist_ok=True, parents=True)
+                shutil.move(src_path, install_dst)
 
         return [Path(x) for x in dst_paths]

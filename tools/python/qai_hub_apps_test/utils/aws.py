@@ -43,7 +43,7 @@ def attempt_with_s3_credentials_warning(
         raise
 
 
-def s3_download(bucket: "Bucket", key: str, local_file_path: str):
+def s3_download(bucket: "Bucket", key: str, local_file_path: str) -> None:
     """Download file at s3://<bucket>/<key> to local_file_path."""
     obj = bucket.Object(key)
     with tqdm.tqdm(total=obj.content_length, unit="B", unit_scale=True) as t:
@@ -56,26 +56,24 @@ def s3_download(bucket: "Bucket", key: str, local_file_path: str):
             t.update(obj.content_length)
 
 
-def get_qaihm_s3(bucket_name: str, requires_admin=False) -> tuple["Bucket", bool]:
+def get_qaihm_s3(
+    bucket_name: str, requires_admin: bool = False
+) -> tuple["Bucket", bool]:
     """
     Get boto3 objects for interacting with the given bucket using QAIHM credentials.
     Throws if credentials do not exist
 
     Parameters
     ----------
-    bucket_name: str
+    bucket_name
         Name of the s3 bucket to get objects for.
+    requires_admin
+        If True, uses the admin AWS profile.
 
     Returns
     -------
-    session: boto3.Session
-        Session object
-
-    bucket: Bucket
-        Bucket object
-
-    is_admin: bool
-        Whether or not the above returned objects have admin permissions.
+    tuple[Bucket, bool]
+        Bucket object and a bool indicating whether the session has admin permissions.
     """
     if requires_admin:
         profile_name = "qaihm-admin"

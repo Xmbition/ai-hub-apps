@@ -5,6 +5,7 @@
 import logging
 import threading
 import time
+from collections.abc import Iterator
 
 import cv2
 from flask import Flask, Response
@@ -16,8 +17,8 @@ lock = threading.Lock()
 
 
 # this is a bottleneck for large images
-def set_frame(bgr_frame, jpeg_quality=80):
-    global latest_jpeg
+def set_frame(bgr_frame: cv2.typing.MatLike, jpeg_quality: int = 80) -> None:
+    global latest_jpeg  # noqa: PLW0603
     ok, jpg = cv2.imencode(
         ".jpg", bgr_frame, [int(cv2.IMWRITE_JPEG_QUALITY), jpeg_quality]
     )
@@ -27,7 +28,7 @@ def set_frame(bgr_frame, jpeg_quality=80):
         latest_jpeg = jpg.tobytes()
 
 
-def mjpeg_generator():
+def mjpeg_generator() -> Iterator[bytes]:
     # Streams the most recent frame repeatedly
     while True:
         with lock:
@@ -41,7 +42,7 @@ def mjpeg_generator():
 
 
 @app.route("/")
-def index():
+def index() -> str:
     return """
     <html>
       <head><title>RB3 Stream</title></head>
@@ -53,17 +54,17 @@ def index():
 
 
 @app.route("/stream")
-def stream():
+def stream() -> Response:
     return Response(
         mjpeg_generator(), mimetype="multipart/x-mixed-replace; boundary=frame"
     )
 
 
-def run_server():
+def run_server() -> None:
     app.run(host="0.0.0.0", port=8080, threaded=True)
 
 
-def start_thread():
+def start_thread() -> None:
     # Run this early in your main
     threading.Thread(target=run_server, daemon=True).start()
 

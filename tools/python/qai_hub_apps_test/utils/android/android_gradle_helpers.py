@@ -8,12 +8,13 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+from qai_hub_models.models.common import Precision, QAIRTVersion
+from qai_hub_models.scorecard.device import ScorecardDevice
+
 from qai_hub_apps_test.configs.info_yaml import QAIHAAppInfo
 from qai_hub_apps_test.configs.versions_yaml import VersionsRegistry
 from qai_hub_apps_test.utils.models.install_model import install_model
 from qai_hub_apps_test.utils.verify_result import VerifyResult
-from qai_hub_models.models.common import Precision, QAIRTVersion
-from qai_hub_models.scorecard.device import ScorecardDevice
 
 # Names of dependencies that are verified by this class.
 LITERT_DEP = "com.google.ai.edge.litert:litert"
@@ -29,7 +30,7 @@ QAIRT_TFLITE_DELEGATE_DEP = "com.qualcomm.qti:qnn-litert-delegate"
 
 def clean_android_app(
     app_root: str | os.PathLike,
-):
+) -> None:
     subprocess.run("gradle clean", cwd=app_root, text=True, shell=True, check=True)
 
 
@@ -41,7 +42,7 @@ def build_android_app(
     device: ScorecardDevice | None = None,
     qaihm_version_tag: str | None = None,
     clean_build: bool = False,
-):
+) -> None:
     """
     Builds an Android application using the specified configuration and model parameters.
 
@@ -85,8 +86,10 @@ def build_android_app(
 def verify_android_app_versions_match(
     app_root: str | os.PathLike,
     app_info: QAIHAAppInfo,
-    versions: VersionsRegistry = VersionsRegistry.load(),
+    versions: VersionsRegistry | None = None,
 ) -> VerifyResult:
+    if versions is None:
+        versions = VersionsRegistry.load()
     """
     Verifies that the Android app at the given root directory
     uses the same versions of runtimes as are listed in the versions yaml.
@@ -111,7 +114,7 @@ def verify_android_app_versions_match(
         return VerifyResult(errors)
 
     def verify_same_as_versions_yaml_or_add_error(
-        name, app_version, required_version
+        name: str, app_version: Any, required_version: Any
     ) -> bool:
         if app_version != required_version:
             errors.append(
@@ -179,11 +182,10 @@ def verify_android_app_versions_match(
         )
 
         for dep in [TFLITE_GPU_DEP, TFLITE_GPU_API_DEP]:
-            if dep_version := deps.get(dep):
-                if dep_version != app_tflite_version:
-                    errors.append(
-                        f"Dependencies {TFLITE_DEP} ({app_tflite_version}) and {dep} ({dep_version}) should be the same version."
-                    )
+            if (dep_version := deps.get(dep)) and dep_version != app_tflite_version:
+                errors.append(  # noqa: PERF401
+                    f"Dependencies {TFLITE_DEP} ({app_tflite_version}) and {dep} ({dep_version}) should be the same version."
+                )
 
         required_tflite_support_version = versions.tf_lite_support
         litert_support_version: str | None = deps.get(TFLITE_SUPPORT_DEP)
@@ -250,7 +252,7 @@ def extract_api_versions(app_root: str | os.PathLike) -> dict[str, str]:
 
     Returns
     -------
-    dict[str, int]
+    dict[str, str]
         Map from version information -> version. Example:
         dict(
             minAPI=30
@@ -262,6 +264,7 @@ def extract_api_versions(app_root: str | os.PathLike) -> dict[str, str]:
     """
     process = subprocess.run(
         "gradle printAPIVersion -q",
+        check=False,
         cwd=app_root,
         capture_output=True,
         text=True,
@@ -313,13 +316,13 @@ def get_project_dependencies(
         shell=True,
         check=True,
     ).stdout.split("\n")
-    deps: dict[str, str] = dict()
+    deps: dict[str, str] = {}
     for line in deps_out:
         # Match the following output from Gradle:
         #   +--- mypackage:version
         #    --- mypackage:version
         # And save them to the `deps` dictionary.
-        if match := re.match("^(\\+---|\\\---) (.*):([^\\s]*)", line):  # noqa: W605
+        if match := re.match("^(\\+---|\\\---) (.*):([^\\s]*)", line):
             if match.group(2) not in deps:
                 deps[match.group(2)] = match.group(3)
             elif deps[match.group(2)] != match.group(3):
@@ -347,6 +350,6 @@ def get_java_target_compatibility_version(platform_version: int) -> int:
         raise NotImplementedError()
     if platform_version == 34:
         return 17
-    elif platform_version >= 30:
+    if platform_version >= 30:
         return 11
     raise NotImplementedError()

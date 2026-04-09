@@ -2,11 +2,10 @@
 # Copyright (c) 2025 Qualcomm Technologies, Inc. and/or its subsidiaries.
 # SPDX-License-Identifier: BSD-3-Clause
 # ---------------------------------------------------------------------
-from typing import Tuple
 
 
 def get_gstreamer_input_pipeline(
-    video_source: str, video_source_size: Tuple[int, int]
+    video_source: str, video_source_size: tuple[int, int]
 ) -> str:
     """
     Build a GStreamer pipeline string for reading frames from a given video source,
@@ -14,12 +13,12 @@ def get_gstreamer_input_pipeline(
 
     Parameters
     ----------
-    video_source : str
+    video_source
         The left-hand side of the pipeline specifying the source element and its properties,
         e.g. `"v4l2src device=/dev/video0"` or `"filesrc location=video.mp4 ! decodebin"`.
         This string should be a valid GStreamer element (or sub-pipeline) ending with `!`
         not required here because this function appends it for you.
-    video_source_size : tuple[int, int]
+    video_source_size
         The (width, height) of the incoming video frames expected from `video_source`.
         These are used to set the caps on both the NV12 and RGB segments.
 

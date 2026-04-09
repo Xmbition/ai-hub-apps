@@ -3,9 +3,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # ---------------------------------------------------------------------
 from pathlib import Path
+from typing import Any
 
 
-def path_idfn(val):
+def path_idfn(val: Any) -> str | None:
     """
     Pytest generates test titles based on the parameterization of each test.
     This title can both be used as a filter during test selection and is
@@ -23,3 +24,4 @@ def path_idfn(val):
     """
     if isinstance(val, Path):
         return str(val)
+    return None

@@ -23,3 +23,20 @@ dependencies = {file = "qai_hub_apps_test/requirements.txt"}
 [tool.setuptools.dynamic.optional-dependencies]
 precommit = {file = "qai_hub_apps_test/requirements-precommit.txt"}
 dev       = {file = "qai_hub_apps_test/requirements-dev.txt"}
+
+[tool.pydoclint]
+style = 'numpy'
+arg-type-hints-in-docstring = false
+skip-checking-short-docstrings = true
+skip-checking-raises = true
+allow-init-docstring = true
+check-style-mismatch = true
+
+[tool.mypy]
+ignore_missing_imports = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = "qai_hub_apps_test.*"
+disable_error_code = ["type-abstract", "override", "method-assign"]
+check_untyped_defs = true

@@ -10,7 +10,7 @@ import os
 import shutil
 import subprocess
 from sys import platform
-from typing import Optional
+from typing import Any
 
 if platform == "win32":
     SHELL_EXECUTABLE = shutil.which("powershell")
@@ -25,7 +25,7 @@ class Colors:
     OFF = "\033[0m"
 
 
-def echo(value: str, **kwargs) -> None:
+def echo(value: str, **kwargs: Any) -> None:
     """Print to stdout without buffering."""
     print(value, flush=True, **kwargs)
 
@@ -69,7 +69,7 @@ def get_venv_python(venv_path: str) -> str:
     return os.path.join(venv_path, "bin", "python")
 
 
-def get_venv_uv_pip(venv_path: str) -> Optional[str]:
+def get_venv_uv_pip(venv_path: str) -> str | None:
     """Return 'uv pip' command with the venv's python if uv is available, else None."""
     if uv_installed():
         python = get_venv_python(venv_path)

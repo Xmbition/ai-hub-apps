@@ -6,19 +6,28 @@ import os
 from enum import Enum, unique
 from pathlib import Path
 
-from pydantic import ConfigDict, Field
-from qai_hub_apps_test.utils.paths import APPS_ROOT, REPOSITORY_ROOT
+from pydantic import ConfigDict, Field, model_validator
 from qai_hub_models.configs.info_yaml import MODEL_LICENSE as LICENSE
 from qai_hub_models.models.common import Precision, TargetRuntime
 from qai_hub_models.scorecard.device import ScorecardDevice, cs_8_gen_3, cs_x_elite
 from qai_hub_models.utils.base_config import BaseQAIHMConfig
 from typing_extensions import assert_never
 
+from qai_hub_apps_test.utils.paths import APPS_ROOT, REPOSITORY_ROOT
+
 
 @unique
 class AppStatus(Enum):
     UNPUBLISHED = "unpublished"
     PUBLISHED = "published"
+
+
+@unique
+class AppLanguage(Enum):
+    PYTHON = "Python"
+    CPP = "C++"
+    JAVA = "Java"
+    KOTLIN = "Kotlin"
 
 
 @unique
@@ -31,32 +40,59 @@ class AppType(Enum):
     def default_device(self) -> ScorecardDevice:
         if self == AppType.ANDROID:
             return cs_8_gen_3
-        elif self == AppType.WINDOWS:
+        if self == AppType.WINDOWS:
             return cs_x_elite
-        elif self == AppType.UBUNTU:
+        if self == AppType.UBUNTU:
             return cs_x_elite  # safe-harbor; no device has ubuntu os yet
         assert_never(self)
 
 
-class QAIHAAppInfo(BaseQAIHMConfig):
+class QAIHACLIAppInfo(BaseQAIHMConfig):
+    """CLI-facing subset of app info — the fields written to registry.yaml."""
+
     model_config = ConfigDict(extra="ignore")
+
+    name: str
+    id: str
+    status: AppStatus
+    headline: str
+    description: str
+    domain: str
+    use_case: str
+    app_repo_url: str | None = None
+    app_type: AppType
+    runtime: TargetRuntime
+    related_models: list[str]
+    precisions: list[Precision]
+
+
+class QAIHAAppInfo(QAIHACLIAppInfo):
+    """Full internal app info — adds CI/build fields on top of CLI-facing fields."""
+
+    model_config = ConfigDict(extra="ignore")
+
     ##########################
     # General Information
     ##########################
 
-    # App name
-    name: str
-    status: AppStatus
     skip_test: str | None = None
+    app_repo_relative_path: str | None = (
+        None  # relative path within qualcomm/ai-hub-apps
+    )
+
+    @model_validator(mode="after")
+    def _validate_repo(self) -> "QAIHAAppInfo":
+        if not self.app_repo_url and not self.app_repo_relative_path:
+            raise ValueError(
+                f"App '{self.id}': one of app_repo_url or app_repo_relative_path must be set"
+            )
+        return self
 
     # License information
     license_url: str
     license_type: LICENSE
 
-    # Model IDs / Precisions / Runtime this app supports
-    related_models: list[str]
-    precisions: list[Precision]
-    runtime: TargetRuntime
+    languages: list[AppLanguage]
 
     ##########################
     # Build System Information
@@ -75,10 +111,6 @@ class QAIHAAppInfo(BaseQAIHMConfig):
     private_model_s3_paths: dict[str, dict[Precision, dict[str, str]]] = Field(
         default_factory=dict
     )
-
-    # The type of application. Each application type uses a standard build system.
-    # For example, all Android apps use Gradle and the Java SDK.
-    app_type: AppType
 
     @staticmethod
     def from_app(path: str | os.PathLike) -> tuple["QAIHAAppInfo", Path]:

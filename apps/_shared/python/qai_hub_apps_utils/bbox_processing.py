@@ -2,29 +2,27 @@
 # Copyright (c) 2025 Qualcomm Technologies, Inc. and/or its subsidiaries.
 # SPDX-License-Identifier: BSD-3-Clause
 # ---------------------------------------------------------------------
-from typing import List, Tuple
 
 import cv2
 import numpy as np
 
 
-def _compute_iou(box: np.ndarray, boxes: np.ndarray) -> np.ndarray:
+def compute_iou(box: np.ndarray, boxes: np.ndarray) -> np.ndarray:
     """
     Compute the Intersection over Union (IoU) between a single box and an array of boxes.
 
     Parameters
     ----------
-    box : np.ndarray
+    box
         The reference box in the format ``(x1, y1, x2, y2)``.
-    boxes : np.ndarray
+    boxes
         An array of boxes, each in the format ``(x1, y1, x2, y2)``.
 
     Returns
     -------
-    ndarray of shape (N,)
+    np.ndarray
         IoU values for each box in `boxes` with respect to `box`.
     """
-
     # Intersection coordinates
     x1 = np.maximum(box[0], boxes[:, 0])
     y1 = np.maximum(box[1], boxes[:, 1])
@@ -42,24 +40,23 @@ def _compute_iou(box: np.ndarray, boxes: np.ndarray) -> np.ndarray:
     return intersection / np.maximum(union, 1e-10)
 
 
-def _nms(boxes: np.ndarray, scores: np.ndarray, iou_threshold: float) -> np.ndarray:
-
+def nms(boxes: np.ndarray, scores: np.ndarray, iou_threshold: float) -> np.ndarray:
     """
     Perform standard Non-Maximum Suppression (NMS) on a set of bounding boxes.
 
     Parameters
     ----------
-    boxes : np.ndarray of shape (N, 4)
-        Bounding boxes in the format ``(x1, y1, x2, y2)``.
-    scores : np.ndarray of shape (N,)
-        Confidence scores associated with each box.
-    iou_threshold : float
+    boxes
+        Bounding boxes of shape (N, 4) in the format ``(x1, y1, x2, y2)``.
+    scores
+        Confidence scores of shape (N,) associated with each box.
+    iou_threshold
         IoU threshold used to determine whether boxes overlap too much.
 
     Returns
     -------
-    np.ndarray of shape (M,)
-        Indices of the boxes that are kept after NMS, where ``M ≤ N``.
+    np.ndarray
+        Indices of the boxes that are kept after NMS, shape (M,) where ``M ≤ N``.
 
     """
     # Sort by score descending
@@ -76,7 +73,7 @@ def _nms(boxes: np.ndarray, scores: np.ndarray, iou_threshold: float) -> np.ndar
 
         # Compute IoU with remaining boxes
         remaining = order[1:]
-        ious = _compute_iou(boxes[idx], boxes[remaining])
+        ious = compute_iou(boxes[idx], boxes[remaining])
 
         # Keep boxes with IoU below threshold
         mask = ious <= iou_threshold
@@ -85,33 +82,31 @@ def _nms(boxes: np.ndarray, scores: np.ndarray, iou_threshold: float) -> np.ndar
     return np.array(keep, dtype=np.int64)
 
 
-def _batched_nms_numpy(
+def _batched_nms(
     boxes: np.ndarray,
     scores: np.ndarray,
     class_indices: np.ndarray,
     iou_threshold: float,
 ) -> np.ndarray:
-
     """
     Apply Non-Maximum Suppression (NMS) independently for each class.
 
     Parameters
     ----------
-    boxes : np.ndarray of shape (N, 4)
-        Bounding boxes in the format ``(x1, y1, x2, y2)``.
-    scores : np.ndarray of shape (N,)
-        Confidence scores for each bounding box.
-    class_indices : np.ndarray of shape (N,)
-        Class ID for each box, used to group boxes before applying NMS.
-    iou_threshold : float
+    boxes
+        Bounding boxes of shape (N, 4) in the format ``(x1, y1, x2, y2)``.
+    scores
+        Confidence scores of shape (N,) for each bounding box.
+    class_indices
+        Class ID of shape (N,) for each box, used to group boxes before applying NMS.
+    iou_threshold
         IoU threshold used to determine suppression.
 
     Returns
     -------
-    np.ndarray of shape (M,)
-        Indices of boxes kept after per-class NMS, where ``M ≤ N``.
+    np.ndarray
+        Indices of boxes kept after per-class NMS, shape (M,) where ``M ≤ N``.
     """
-
     unique_classes = np.unique(class_indices)
     keep_all = []
 
@@ -121,7 +116,7 @@ def _batched_nms_numpy(
         cls_boxes = boxes[cls_mask]
         cls_scores = scores[cls_mask]
 
-        cls_keep = _nms(cls_boxes, cls_scores, iou_threshold)
+        cls_keep = nms(cls_boxes, cls_scores, iou_threshold)
         keep_all.append(cls_indices[cls_keep])
 
     if len(keep_all) == 0:
@@ -129,8 +124,7 @@ def _batched_nms_numpy(
 
     keep = np.concatenate(keep_all)
     # Sort by score to maintain consistent ordering
-    keep = keep[np.argsort(scores[keep])[::-1]]
-    return keep
+    return keep[np.argsort(scores[keep])[::-1]]
 
 
 def batched_nms(
@@ -145,32 +139,24 @@ def batched_nms(
 
     Parameters
     ----------
-    iou_threshold : float
+    iou_threshold
         Intersection over union (IoU) threshold
-    score_threshold : float or None
+    score_threshold
         Score threshold (throw away any boxes with scores under this threshold)
-    boxes : np.ndarray of shape (B, N, 4)
-        Boxes to run NMS on. Shape is [B, N, 4], B == batch, N == num boxes,
+    boxes
+        Boxes of shape (B, N, 4) to run NMS on, where B == batch, N == num boxes,
         and 4 == (x1, y1, x2, y2)
-    scores : np.ndarray of shape (B, N)
-        Scores for each box. Shape is [B, N], range is [0:1]
-    class_indices : np.ndarray of shape (B, N), optional
-        Class for each box. Shape is [B, N].
+    scores
+        Scores of shape (B, N) for each box, range is [0:1]
+    class_indices
+        Class of shape (B, N) for each box.
         If set, NMS is applied per-class rather than globally.
 
     Returns
     -------
-    boxes_out : List[np.ndarray]
-        Output boxes. This is list of arrays; one array per batch.
-        Each array is shape [S, 4], where S == number of selected boxes,
-        and 4 == (x1, y1, x2, y2)
-    scores_out : List[np.ndarray]
-        Output scores. This is list of arrays; one array per batch.
-        Each array is shape [S], where S == number of selected boxes.
-    class_indices_out : List[np.ndarray]
-        Output classes. This is list of arrays; one array per batch.
-        Each array is shape [S], where S == number of selected boxes.
-        if class_indices is None (default), this is an empty list.
+    tuple[list[np.ndarray], ...]
+        Tuple of (boxes_out, scores_out, class_indices_out), each a list of arrays
+        one per batch item. class_indices_out is empty if class_indices is None.
     """
     scores_out: list[np.ndarray] = []
     boxes_out: list[np.ndarray] = []
@@ -199,7 +185,7 @@ def batched_nms(
             # Apply NMS
             if batch_class_indices is not None:
                 # class dependent
-                nms_indices = _batched_nms_numpy(
+                nms_indices = _batched_nms(
                     batch_boxes[..., :4],
                     batch_scores,
                     batch_class_indices,
@@ -207,7 +193,7 @@ def batched_nms(
                 )
             else:
                 # class agnostic
-                nms_indices = _nms(batch_boxes[..., :4], batch_scores, iou_threshold)
+                nms_indices = nms(batch_boxes[..., :4], batch_scores, iou_threshold)
 
             # Apply NMS indices
             batch_boxes = batch_boxes[nms_indices]
@@ -233,13 +219,13 @@ def box_xywh_to_xyxy(box_cwh: np.ndarray, flat_boxes: bool = False) -> np.ndarra
 
     Parameters
     ----------
-    box_cwh : np.ndarray
+    box_cwh
         Bounding boxes.
         If flat_boxes:
             Shape is [..., 4] with layout [xc, yc, w, h]
         else:
             Shape is [..., 2, 2] with layout [[xc, yc], [w, h]]
-    flat_boxes : bool
+    flat_boxes
         Whether input is in flat layout.
 
     Returns
@@ -286,7 +272,7 @@ def box_xyxy_to_xywh(box_xy: np.ndarray) -> np.ndarray:
 
     Parameters
     ----------
-    box_xy : np.ndarray
+    box_xy
         Bounding box tensor shaped [B, 2, 2]
         where:
             box_xy[..., 0, :] = (x0, y0)
@@ -333,15 +319,15 @@ def apply_directional_box_offset(
 
     Parameters
     ----------
-    offset : float or np.ndarray
+    offset
         Offset magnitude (absolute units). Can be scalar or array broadcastable to [B].
-    vec_start : np.ndarray
+    vec_start
         Starting point of the vector. Shape [B, 2] where 2 == (x, y).
-    vec_end : np.ndarray
+    vec_end
         Ending point of the vector. Shape [B, 2] where 2 == (x, y).
-    xc : np.ndarray
+    xc
         x center(s) of box(es). Modified in-place.
-    yc : np.ndarray
+    yc
         y center(s) of box(es). Modified in-place.
 
     Returns
@@ -382,15 +368,15 @@ def compute_box_corners_with_rotation(
 
     Parameters
     ----------
-    xc : np.ndarray
+    xc
         Center of box (x). Shape [B]
-    yc : np.ndarray
+    yc
         Center of box (y). Shape [B]
-    w : np.ndarray
+    w
         Width of box. Shape [B]
-    h : np.ndarray
+    h
         Height of box. Shape [B]
-    theta : np.ndarray
+    theta
         Rotation of box (in radians). Shape [B]
 
     Returns
@@ -444,8 +430,8 @@ def compute_box_corners_with_rotation(
 
 
 def compute_box_affine_crop_resize_matrix(
-    box_corners: np.ndarray, output_image_size: Tuple[int, int]
-) -> List[np.ndarray]:
+    box_corners: np.ndarray, output_image_size: tuple[int, int]
+) -> list[np.ndarray]:
     """
     Compute the affine transform matrices required to crop, rescale, and pad the
     rotated box defined by the input corners to fit into an output image size
@@ -453,20 +439,20 @@ def compute_box_affine_crop_resize_matrix(
 
     Parameters
     ----------
-    box_corners : np.ndarray
+    box_corners
         Bounding box corners to map *from*. Shape [B, K, 2], where:
           - B = batch size
           - K >= 3 corners (expected order: top-left, bottom-left, top-right, (optional bottom-right))
           - last dim = (x, y)
         If K > 3, only the first 3 corners are used (TL, BL, TR), matching the original logic.
 
-    output_image_size : Tuple[int, int]
+    output_image_size
         Output (width, height) to which the box is mapped.
         Note: This function expects a tuple in the order (W, H).
 
     Returns
     -------
-    affines : List[np.ndarray]
+    list[np.ndarray]
         List of affine matrices, each of shape (2, 3), one per batch element.
     """
     # Unpack target width/height;
@@ -493,7 +479,7 @@ def compute_box_affine_crop_resize_matrix(
             f"`box_corners` must provide at least 3 corners per item; got K={box_corners.shape[1]}"
         )
 
-    affines: List[np.ndarray] = []
+    affines: list[np.ndarray] = []
     B = box_corners.shape[0]
     for b in range(B):
         # Use only the first 3 corners (TL, BL, TR) to match original behavior

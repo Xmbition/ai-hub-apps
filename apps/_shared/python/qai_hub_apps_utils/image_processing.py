@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # ---------------------------------------------------------------------
 import math
-from typing import Tuple
 
 import cv2
 import numpy as np
@@ -11,9 +10,9 @@ import numpy as np
 
 def denormalize_coordinates(
     coordinates: np.ndarray,
-    input_img_size: Tuple[int, int],
+    input_img_size: tuple[int, int],
     scale: float = 1.0,
-    pad: Tuple[int, int] = (0, 0),
+    pad: tuple[int, int] = (0, 0),
 ) -> np.ndarray:
     """
     Maps detection coordinates from normalized [0, 1] to absolute coordinates in
@@ -21,17 +20,14 @@ def denormalize_coordinates(
 
     Parameters
     ----------
-    coordinates : np.ndarray
+    coordinates
         Tensor of shape [..., 2]. Coordinates are ordered (y, x) and normalized to [0,1].
         This array is modified in place.
-
-    input_img_size : (int, int)
+    input_img_size
         (H, W) of the network input (the resized padded tensor).
-
-    scale : float
+    scale
         Scale factor used during resizing to network size.
-
-    pad : (int, int)
+    pad
         Padding (H_pad, W_pad) added during resize-to-network.
 
     Returns
@@ -63,13 +59,11 @@ def apply_batched_affines_to_frame(
 
     Parameters
     ----------
-    frame: np.ndarray
+    frame
         Frame on which to apply the affine. Shape is [H, W, C], dtype must be np.byte.
-
-    affines: List[np.ndarray]
+    affines
         List of 2x3 affine matrices to apply to the frame.
-
-    output_image_size: Tuple[int, int]
+    output_image_size
         Size of each output frame.
 
     Returns
@@ -77,10 +71,9 @@ def apply_batched_affines_to_frame(
     np.ndarray
         Computed images. Shape is [B, H, W, C]
     """
-    assert (
-        frame.dtype == np.byte
-        or frame.dtype
-        == np.uint8  # noqa: PLR1714 Using a set for comparison is not equivalent to using == on both of these individually.
+    assert frame.dtype in (
+        np.byte,
+        np.uint8,
     )  # cv2 does not work correctly otherwise. Don't remove this assertion.
 
     imgs = []
@@ -98,15 +91,15 @@ def apply_affine_to_coordinates(
 
     Parameters
     ----------
-    coordinates: np.ndarray
-        Coordinates on which to apply the affine. Shape is [ ..., 2 ], where 2 == [X, Y]
-
-    affines: np.ndarray
+    coordinates
+        Coordinates on which to apply the affine. Shape is [..., 2], where 2 == [X, Y]
+    affine
         Affine matrix to apply to the coordinates.
 
     Returns
     -------
-        Transformed coordinates. Shape is [ ..., 2 ], where 2 == [X, Y]
+    np.ndarray
+        Transformed coordinates. Shape is [..., 2], where 2 == [X, Y]
     """
     return (affine[:, :2] @ coordinates.T + affine[:, 2:]).T
 
@@ -121,19 +114,17 @@ def compute_vector_rotation(
 
     Parameters
     ----------
-    vec_start : np.ndarray
+    vec_start
         Starting point of the vector. Shape [B, 2] (x, y).
-
-    vec_end : np.ndarray
+    vec_end
         Ending point of the vector. Shape [B, 2] (x, y).
-
-    offset_rads : float or np.ndarray
+    offset_rads
         Offset (in radians) to subtract from the computed rotation.
         Can be a scalar or array broadcastable to shape [B].
 
     Returns
     -------
-    theta : np.ndarray
+    np.ndarray
         Rotation angle in radians. Shape [B].
     """
     # Compute dy, dx
@@ -141,13 +132,12 @@ def compute_vector_rotation(
     dx = vec_start[..., 0] - vec_end[..., 0]
 
     # atan2(dy, dx)
-    theta = np.arctan2(dy, dx) - offset_rads
-    return theta
+    return np.arctan2(dy, dx) - offset_rads
 
 
 def resize_pad(
     image: np.ndarray,
-    dst_size: Tuple[int, int],
+    dst_size: tuple[int, int],
 ) -> tuple[np.ndarray, float, tuple[int, int]]:
     """
     Resize and pad image to shape (dst_size[0], dst_size[1]) while preserving aspect ratio.
@@ -156,19 +146,16 @@ def resize_pad(
     ----------
     image
         Input image with shape [H, W] or [H, W, C]. dtype can be uint8, float32, etc.
-
     dst_size
         Desired (height, width).
 
     Returns
     -------
-    rescaled_padded_image : np.ndarray
+    np.ndarray
         Output image with shape (dst_h, dst_w) or (dst_h, dst_w, C).
-
-    scale : float
+    float
         Scale factor applied to the original image (same for H and W).
-
-    padding : (int, int)
+    tuple[int, int]
         (pad_left, pad_top) applied to the resized image.
     """
     if image.ndim not in (2, 3):

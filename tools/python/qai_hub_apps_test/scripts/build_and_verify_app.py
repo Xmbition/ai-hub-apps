@@ -4,6 +4,11 @@
 # ---------------------------------------------------------------------
 import os
 
+from qai_hub_models.models.common import Precision
+from qai_hub_models.scorecard.device import ScorecardDevice
+from tap import Tap
+from typing_extensions import assert_never
+
 from qai_hub_apps_test.configs.info_yaml import AppType, QAIHAAppInfo
 from qai_hub_apps_test.configs.versions_yaml import VersionsRegistry
 from qai_hub_apps_test.utils.android.android_gradle_helpers import (
@@ -12,23 +17,28 @@ from qai_hub_apps_test.utils.android.android_gradle_helpers import (
     verify_android_app_versions_match,
 )
 from qai_hub_apps_test.utils.models.verify_model import verify_model_asset_is_compatible
+from qai_hub_apps_test.utils.verify_result import VerifyResult
 from qai_hub_apps_test.utils.windows.windows_vs_helpers import (
     build_windows_app,
     clean_windows_app,
     verify_windows_app_versions_match,
 )
-from qai_hub_models.models.common import Precision
-from qai_hub_models.scorecard.device import ScorecardDevice
-from tap import Tap
-from typing_extensions import assert_never
 
 
 class BuildAppParser(Tap):
     app: str  # The app name, identified by the subfolder under 'apps'. For example, 'android/ObjectDetection'
-    model_id: str | None = None  # The model ID to build the app with. If None, can use any model supported by the given app.
-    precision: Precision | None = None  # The precision to build the app with. If None, can use any model precision supported by the given app, usually float.
-    device: ScorecardDevice | None = None  # The device to build the app for. If None, uses a generic android device, or raises an error if a device must be specified for the given app.
-    qaihm_version: str | None = None  # The AI Hub Models version from which the model should be fetched. If None, uses the currently installed version of AI Hub Models.
+    model_id: str | None = (
+        None  # The model ID to build the app with. If None, can use any model supported by the given app.
+    )
+    precision: Precision | None = (
+        None  # The precision to build the app with. If None, can use any model precision supported by the given app, usually float.
+    )
+    device: ScorecardDevice | None = (
+        None  # The device to build the app for. If None, uses a generic android device, or raises an error if a device must be specified for the given app.
+    )
+    qaihm_version: str | None = (
+        None  # The AI Hub Models version from which the model should be fetched. If None, uses the currently installed version of AI Hub Models.
+    )
     verify: bool = True  # If True, verifies the app and model match standard SDK versions required by this repository before building.
     build: bool = True  # If True, builds the app.
     clean: bool = False  # If True, cleans the build. If combined with `build=True`, the cleaning will happen before the build.
@@ -38,7 +48,7 @@ class BuildAppParser(Tap):
         self.add_argument("--device", type=ScorecardDevice.parse)
 
 
-def main():
+def main() -> None:
     args = BuildAppParser().parse_args()
     versions = VersionsRegistry.load()
     app_info, app_root = QAIHAAppInfo.from_app(args.app)
@@ -63,9 +73,9 @@ def main():
             app_root,
             versions,
         )
-        assert (
-            not verify_result.has_errors
-        ), f"App verification has errors:\n{verify_result.pretty_errors}"
+        assert not verify_result.has_errors, (
+            f"App verification has errors:\n{verify_result.pretty_errors}"
+        )
         if verify_result.has_warnings:
             print(f"App verification has warnings:\n: {verify_result.pretty_warnings}")
 
@@ -73,7 +83,6 @@ def main():
         build_app(
             app_info,
             app_root,
-            versions,
             model_id,
             precision,
             args.device,
@@ -92,7 +101,7 @@ def build_app(
     device: ScorecardDevice | None = None,
     qaihm_version_tag: str | None = None,
     clean_build: bool = False,
-):
+) -> None:
     """
     Builds an application using the specified configuration and model parameters.
 
@@ -133,6 +142,8 @@ def build_app(
             qaihm_version_tag,
             clean_build,
         )
+    elif app_info.app_type == AppType.UBUNTU:
+        raise NotImplementedError("Building Ubuntu Python apps is not supported.")
     else:
         assert_never(app_info.app_type)
 
@@ -141,7 +152,7 @@ def verify_app(
     app_info: QAIHAAppInfo,
     app_root: str | os.PathLike,
     versions: VersionsRegistry,
-):
+) -> VerifyResult:
     """
     Verifies that the app at the given root directory
     uses the same versions of runtimes as are listed in the versions yaml.
@@ -164,13 +175,15 @@ def verify_app(
         verify_result = verify_android_app_versions_match(app_root, app_info, versions)
     elif app_info.app_type == AppType.WINDOWS:
         verify_result = verify_windows_app_versions_match(app_root, app_info, versions)
+    elif app_info.app_type == AppType.UBUNTU:
+        verify_result = VerifyResult()
     else:
         assert_never(app_info.app_type)
 
     return verify_result
 
 
-def clean_app(app_info: QAIHAAppInfo, app_root: str | os.PathLike):
+def clean_app(app_info: QAIHAAppInfo, app_root: str | os.PathLike) -> None:
     """
     Clean previous builds for this app.
 

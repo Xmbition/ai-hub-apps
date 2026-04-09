@@ -7,9 +7,7 @@ from dataclasses import dataclass, field
 
 @dataclass
 class VerifyResult:
-    """
-    Storage for errors & warnings found during model / app verification.
-    """
+    """Storage for errors & warnings found during model / app verification."""
 
     errors: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)

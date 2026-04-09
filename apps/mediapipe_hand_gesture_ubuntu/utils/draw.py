@@ -5,155 +5,8 @@
 
 from __future__ import annotations
 
-import cv2
 import numpy as np
-
-
-def draw_points(
-    frame: np.ndarray,
-    points: np.ndarray,
-    color: tuple[int, int, int] = (0, 0, 0),
-    size: int = 10,
-):
-    """
-    Draw the given points on the frame.
-
-    Parameters
-    ----------
-    frame: np.ndarray
-        Numpy array representing RGB image with shape [H, W, 3] and type np.uint8.
-
-    points: np.ndarray
-        Numpy array of shape [N, 2] where layout is
-            [x1, y1] [x2, y2], ...
-
-    color: tuple[int, int, int]
-        Color of drawn points (RGB)
-
-    size: int
-        Size of drawn points
-
-    Returns
-    -------
-        None; modifies frame in place.
-    """
-    assert points.ndim == 2 and points.shape[1] == 2
-    assert isinstance(size, int) or len(size) == len(points)
-    cv_keypoints = []
-    for i, (x, y) in enumerate(points):
-        curr_size = size if isinstance(size, int) else size[i]
-        cv_keypoints.append(cv2.KeyPoint(int(x), int(y), curr_size))
-
-    cv2.drawKeypoints(
-        frame,
-        cv_keypoints,
-        outImage=frame,
-        color=color,
-        flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS,
-    )
-
-
-def draw_connections(
-    frame: np.ndarray,
-    points: np.ndarray,
-    connections: list[tuple[int, int]],
-    color: tuple[int, int, int] = (0, 0, 0),
-    size: int = 1,
-):
-    """
-    Draw connecting lines between the given points on the frame.
-
-    Parameters
-    ----------
-    frame:
-        Numpy array representing RGB image with shape [H, W, 3] and type np.uint8.
-
-    points:
-        Numpy array of shape [N, 2] where layout is
-            [x1, y1] [x2, y2], ...
-
-    connections:
-        List of points that should be connected by a line.
-        Format is [(src point index, dst point index), ...]
-
-    color:
-        Color of drawn points (RGB)
-
-    size: int
-        Size of drawn connection lines
-
-    Returns
-    -------
-        None; modifies frame in place.
-    """
-    point_pairs: (list[tuple[tuple[int, int], tuple[int, int]]] | np.ndarray)
-    assert connections is not None
-    point_pairs = [
-        (
-            (int(points[i][0]), int(points[i][1])),
-            (int(points[j][0]), int(points[j][1])),
-        )
-        for (i, j) in connections
-    ]
-    cv2.polylines(
-        frame,
-        np.asarray(point_pairs, dtype=np.int64),
-        isClosed=False,
-        color=color,
-        thickness=size,  # type: ignore[call-overload]
-    )
-
-
-def draw_box_from_xyxy(
-    frame: np.ndarray,
-    top_left: np.ndarray | tuple[int, int],
-    bottom_right: np.ndarray | tuple[int, int],
-    color: tuple[int, int, int] = (0, 0, 0),
-    size: int = 3,
-    text: str | None = None,
-):
-    """
-    Draw a box using the provided top left / bottom right points to compute the box.
-
-    Parameters
-    ----------
-    frame: np.ndarray
-        Numpy array representing RGB image with shape [H, W, 3] and type np.uint8.
-
-    top_left : np.ndarray | tuple[int, int]
-        Top-left coordinate.
-
-    bottom_right : np.ndarray | tuple[int, int]
-        Bottom-right coordinate.
-
-    color: tuple[int, int, int]
-        Color of drawn points and connection lines (RGB)
-
-    size: int
-        Size of drawn points and connection lines RGB channel layout
-
-    text: None | str
-        Overlay text at the top of the box.
-
-    Returns
-    -------
-        None; modifies frame in place.
-    """
-    if not isinstance(top_left, tuple):
-        top_left = (int(top_left[0].item()), int(top_left[1].item()))
-    if not isinstance(bottom_right, tuple):
-        bottom_right = (int(bottom_right[0].item()), int(bottom_right[1].item()))
-    cv2.rectangle(frame, top_left, bottom_right, color, size)
-    if text is not None:
-        cv2.putText(
-            frame,
-            text,
-            (top_left[0], top_left[1] - 10),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.5,
-            color,
-            size,
-        )
+from qai_hub_apps_utils.draw import draw_box_from_xyxy, draw_connections, draw_points
 
 
 def draw_predictions(
@@ -162,25 +15,21 @@ def draw_predictions(
     batched_is_right_hand: list[list[bool]],
     batched_gesture_labels: list[list[str]],
     landmark_connections: list[tuple[int, int]] | None = None,
-):
+) -> None:
     """
     Draws batched predictions
 
     Parameters
     ----------
-    NHWC_int_numpy_frame: List[np.ndarray]
+    NHWC_int_numpy_frames
         List of Numpy array of shape [H, W, 3] in BGR (OpenCV) format.
-
-    batched_selected_landmarks: List[np.ndarray]
+    batched_selected_landmarks
         List of Numpy array of shape [B, N, D] where indexes 0, 1 across dimension 3 are x, y.
-
-    batched_is_right_hand: List[List[bool]]
+    batched_is_right_hand
         True if the detection is a right hand, false if it's a left hand. None if no hand detected.
-
-    batched_gesture_labels: List[str]
+    batched_gesture_labels
         List of string with resolved labels per hand.
-
-    landmark_connections: List[Tuple[int, int]] | None
+    landmark_connections
         List of connections between landmark points.
     """
     for batch_idx in range(len(NHWC_int_numpy_frames)):
@@ -201,26 +50,24 @@ def draw_landmarks_gesture_label(
     gesture_labels: list[str],
     coords_normalized: bool = False,
     landmark_connections: list[tuple[int, int]] | None = None,
-):
+) -> None:
     """
     Draw landmarks, overlay 'Left/Right: <gesture>' and gesture label near each hand on the image.
 
     Parameters
     ----------
-    NHWC_int_numpy_frame: np.ndarray
+    NHWC_int_numpy_frame
         Numpy array of shape [H, W, 3] in BGR (OpenCV) format.
-
     landmarks
         Numpy array of shape [M, N, D] where indexes 0, 1 across dimension 3 are x, y.
-
-    is_right_hand: List[bool]
+    is_right_hand
         List of boolean of length M.
-
-    gesture_labels: List[str]
+    gesture_labels
         List of string of length M with resolved labels per hand.
-
     coords_normalized
         If True, x,y are in [0, 1] and will be converted to pixel coordinates.
+    landmark_connections
+        List of connections between landmark points.
     """
     H, W = NHWC_int_numpy_frame.shape[:2]
 

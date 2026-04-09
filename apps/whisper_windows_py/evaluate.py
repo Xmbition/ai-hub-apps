@@ -85,7 +85,7 @@ def evaluate_whisper_accuracy(
         print(f"On-Device WER on LibriSpeech: {on_device_wer:.2%}")
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--model-size",

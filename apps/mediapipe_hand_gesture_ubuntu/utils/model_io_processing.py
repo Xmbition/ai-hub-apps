@@ -2,22 +2,22 @@
 # Copyright (c) 2025 Qualcomm Technologies, Inc. and/or its subsidiaries.
 # SPDX-License-Identifier: BSD-3-Clause
 # ---------------------------------------------------------------------
-from typing import List
 
 import numpy as np
-import utils.constants as C
-from utils.bbox_processing import (
+from qai_hub_apps_utils.bbox_processing import (
     apply_directional_box_offset,
     box_xyxy_to_xywh,
     compute_box_corners_with_rotation,
 )
-from utils.image_processing import compute_vector_rotation
+from qai_hub_apps_utils.image_processing import compute_vector_rotation
+
+import utils.constants as C
 
 
 def compute_object_roi(
-    batched_selected_boxes: List[np.ndarray],
-    batched_selected_keypoints: List[np.ndarray],
-) -> List[np.ndarray]:
+    batched_selected_boxes: list[np.ndarray],
+    batched_selected_keypoints: list[np.ndarray],
+) -> list[np.ndarray]:
     """
     From the provided bounding boxes and keypoints, compute the region of interest (ROI) that should be used
     as input to the landmark detection model.
@@ -41,7 +41,7 @@ def compute_object_roi(
 
     Returns
     -------
-    batched_roi_4corners
+    list[np.ndarray]
         Selected object "region of interest" (region used as input to the landmark detector) corner coordinates.
         Empty array if batch had no bounding boxes with a score above the threshold.
         Shape of each list element is [num_selected_boxes, 4, 2], where the 2 corresponds to (x, y).
@@ -59,7 +59,7 @@ def compute_object_roi(
 
     The behavior for the "empty" case mirrors the original (returns a 1-D empty array).
     """
-    batched_selected_roi: List[np.ndarray] = []
+    batched_selected_roi: list[np.ndarray] = []
 
     for boxes, keypoints in zip(
         batched_selected_boxes, batched_selected_keypoints, strict=False
@@ -113,13 +113,13 @@ def preprocess_hand_x64(
 
     Parameters
     ----------
-    pts : np.ndarray
+    pts
         Landmark points, shape [N, 21, 3].
 
-    handedness : np.ndarray
+    handedness
         Handedness flags, shape [N, 1]. Typically 0=left, 1=right.
 
-    mirror : bool
+    mirror
         If True, mirror across X-axis (flip X) and invert handedness.
 
     Returns
@@ -161,5 +161,4 @@ def preprocess_hand_x64(
     flat = pts_n.reshape(pts_n.shape[0], 63)
 
     # Append handedness scalar (cast to float32 for consistency)
-    x64 = np.concatenate([flat, handedness.reshape(-1, 1).astype(np.float32)], axis=1)
-    return x64
+    return np.concatenate([flat, handedness.reshape(-1, 1).astype(np.float32)], axis=1)

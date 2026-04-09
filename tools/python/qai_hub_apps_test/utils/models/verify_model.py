@@ -3,12 +3,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # ---------------------------------------------------------------------
 from packaging.version import Version
-from qai_hub_apps_test.configs.versions_yaml import VersionsRegistry
-from qai_hub_apps_test.utils.verify_result import VerifyResult
 from qai_hub_models.configs.perf_yaml import QAIHMModelPerf
 from qai_hub_models.models.common import Precision, QAIRTVersion, TargetRuntime
 from qai_hub_models.scorecard.device import ScorecardDevice
 from qai_hub_models.utils.version_helpers import QAIHMVersion
+
+from qai_hub_apps_test.configs.versions_yaml import VersionsRegistry
+from qai_hub_apps_test.utils.verify_result import VerifyResult
 
 
 def verify_model_asset_is_compatible(

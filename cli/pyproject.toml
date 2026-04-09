@@ -15,12 +15,40 @@ classifiers = [
     "Programming Language :: Python :: 3",
 ]
 dynamic = ["version"]
+dependencies = [
+    "qai-hub-models-cli",
+    "packaging>=24.2",
+    "pydantic>=2.0",
+    "pyyaml",
+]
 
 [project.scripts]
 qai-hub-apps = "qai_hub_apps.main:main"
+
+[project.urls]
+Homepage = "https://aihub.qualcomm.com/apps"
+GitHub = "https://github.com/qualcomm/ai-hub-apps"
 
 [tool.setuptools.packages.find]
 include = ["qai_hub_apps*"]
 
 [tool.setuptools.dynamic]
 version = {attr = "qai_hub_apps.__version__"}
+
+[tool.pydoclint]
+style = 'numpy'
+arg-type-hints-in-docstring = false
+skip-checking-short-docstrings = true
+skip-checking-raises = true
+allow-init-docstring = true
+check-style-mismatch = true
+
+[tool.mypy]
+ignore_missing_imports = true
+warn_unused_ignores = true
+disable_error_code = ["import-untyped"]
+
+[[tool.mypy.overrides]]
+module = "qai_hub_apps.*"
+disable_error_code = ["type-abstract", "override", "method-assign"]
+check_untyped_defs = true

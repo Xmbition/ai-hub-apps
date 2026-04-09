@@ -10,7 +10,7 @@ from qai_hub_models.models._shared.hf_whisper.app import HfWhisperApp
 from qai_hub_models.utils.onnx.torch_wrapper import OnnxModelTorchWrapper
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         conflict_handler="error",
@@ -74,9 +74,9 @@ def main():
         app.stream(args.stream_audio_device, args.stream_audio_chunk_size)
     else:
         audio = args.audio_file
-        assert (
-            audio is not None
-        ), "No audio file selected. Pass --audio-file or stream from a microphone using --stream-audio-device"
+        assert audio is not None, (
+            "No audio file selected. Pass --audio-file or stream from a microphone using --stream-audio-device"
+        )
 
         # Perform transcription
         print("Before transcription: " + str(datetime.now().astimezone()))
