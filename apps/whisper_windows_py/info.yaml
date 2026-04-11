@@ -1,5 +1,5 @@
 name: Whisper Windows
-id: whisper_windows
+id: whisper_windows_py
 license_url: https://github.com/qualcomm/ai-hub-apps/blob/main/LICENSE
 license_type: bsd-3-clause
 runtime: onnx
@@ -17,4 +17,5 @@ os:
 languages: ['Python']
 use_case: 'Speech Recognition'
 related_models: [whisper_base]
+model_file_path: 'models'
 skip_test: infra doesn't support building python app. CLI will fix https://github.com/qcom-ai-hub/tetracode/issues/17462

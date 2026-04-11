@@ -25,6 +25,7 @@ class AppRegistry(BaseQAIHMConfig):
 
     schema_version: str
     min_cli_version: str
+    version: str
     generated_at: datetime
     apps: list[QAIHACLIAppInfo]
 

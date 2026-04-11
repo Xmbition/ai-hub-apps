@@ -88,7 +88,7 @@ def build_windows_app(
     install_model(
         app_root,
         app_info,
-        app_info.model_file_paths,
+        app_info.model_file_path,
         model_id,
         app_info.runtime,
         precision,

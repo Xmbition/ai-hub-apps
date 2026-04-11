@@ -47,6 +47,10 @@ class AppType(Enum):
         assert_never(self)
 
 
+class AppUrl(BaseQAIHMConfig):
+    source: str
+
+
 class QAIHACLIAppInfo(BaseQAIHMConfig):
     """CLI-facing subset of app info — the fields written to registry.yaml."""
 
@@ -64,6 +68,10 @@ class QAIHACLIAppInfo(BaseQAIHMConfig):
     runtime: TargetRuntime
     related_models: list[str]
     precisions: list[Precision]
+    model_file_path: Path = (
+        Path()
+    )  # Path in which downloaded model files should be placed
+    url: AppUrl | None = None
 
 
 class QAIHAAppInfo(QAIHACLIAppInfo):
@@ -101,10 +109,6 @@ class QAIHAAppInfo(QAIHACLIAppInfo):
     # Supported AI Hub Models version
     # If None, assumes any version is supported.
     qaihm_version: str | None = None
-
-    # Path in which downloaded model files should be placed
-    # A list can be used for multi-component models.
-    model_file_paths: list[Path] = []
 
     # Path to private S3 URLs that CI will use to fetch certain models. map<Model ID, map<Precision, map<Chipset, Relative S3 Path>>
     # This is necessary for complex models (like LLMs) until AI Hub Models has a good way to fetch these.

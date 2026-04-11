@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools >= 80", "setuptools-scm>=9,<10"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -32,8 +32,9 @@ GitHub = "https://github.com/qualcomm/ai-hub-apps"
 [tool.setuptools.packages.find]
 include = ["qai_hub_apps*"]
 
-[tool.setuptools.dynamic]
-version = {attr = "qai_hub_apps.__version__"}
+[tool.setuptools_scm]
+root = ".."
+version_file = "qai_hub_apps/_version.py"
 
 [tool.pydoclint]
 style = 'numpy'

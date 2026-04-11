@@ -4,24 +4,7 @@
 # ---------------------------------------------------------------------
 from __future__ import annotations
 
-import sys
-
-from qai_hub_apps.registry import App, Registry
-
-
-def _print_detail(app: App) -> None:
-    print(app.name)
-    print("\u2550" * 50)
-    print()
-    for label, value in app.detail_fields():
-        print(f"{label + ':':<12}{value}")
-    print()
-    if app.headline:
-        print(f"{app.headline}\n")
-    if app.description:
-        print(f"{app.description}\n")
-    if app.app_repo_url:
-        print(f"Repo:  {app.app_repo_url}")
+from qai_hub_apps.registry import Registry
 
 
 def run_list(registry: Registry) -> None:
@@ -39,9 +22,4 @@ def run_list(registry: Registry) -> None:
 
 def run_info(app_id: str, registry: Registry) -> None:
     app = registry.find_by_id(app_id)
-    if app is None:
-        print(
-            f"Error: app '{app_id}' not found. Run 'qai-hub-apps list' to see available app IDs."
-        )
-        sys.exit(1)
-    _print_detail(app)
+    print(app)

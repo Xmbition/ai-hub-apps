@@ -2,11 +2,3 @@
 # Copyright (c) 2025 Qualcomm Technologies, Inc. and/or its subsidiaries.
 # SPDX-License-Identifier: BSD-3-Clause
 # ---------------------------------------------------------------------
-from pathlib import Path
-from typing import Protocol
-
-
-class Bundler(Protocol):
-    def __call__(
-        self, app_root: Path, output_dir: Path, sdk_parent: Path, make_zip: bool = False
-    ) -> None: ...
