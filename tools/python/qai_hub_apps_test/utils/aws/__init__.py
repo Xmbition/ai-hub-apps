@@ -38,7 +38,7 @@ def attempt_with_s3_credentials_warning(
             or e.response.get("Error", {}).get("Code", None) == "400"
         ):
             raise ValueError(
-                "S3 credentials not found or expired. Run `python scripts/build_and_test.py validate_aws_credentials` and retry."
+                "S3 credentials not found or expired. Run `python -m qai_hub_apps_test.utils.aws.validate_credentials` and retry."
             ) from None
         raise
 
