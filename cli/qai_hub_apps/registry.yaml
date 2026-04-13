@@ -1,7 +1,5 @@
 schema_version: '1.0'
 min_cli_version: 0.0.1
-version: 0.0.1
-generated_at: '2026-04-11T02:15:20.258813'
 apps:
 - name: Whisper Windows
   id: whisper_windows_py
@@ -18,8 +16,6 @@ apps:
   precisions:
   - float
   model_file_path: models
-  url:
-    source: https://qaihub-public-assets.s3.us-west-2.amazonaws.com/qai-hub-apps/apps/0.0.1/whisper_windows_py/source.zip
 - name: MediaPipe Hand Gesture Recognition
   id: mediapipe_hand_gesture_ubuntu
   status: published
@@ -35,8 +31,6 @@ apps:
   precisions:
   - float
   model_file_path: models
-  url:
-    source: https://qaihub-public-assets.s3.us-west-2.amazonaws.com/qai-hub-apps/apps/0.0.1/mediapipe_hand_gesture_ubuntu/source.zip
 - name: Stable Diffusion Windows
   id: stable_diffusion_windows_py
   status: published
@@ -52,5 +46,3 @@ apps:
   precisions:
   - w8a16
   model_file_path: models
-  url:
-    source: https://qaihub-public-assets.s3.us-west-2.amazonaws.com/qai-hub-apps/apps/0.0.1/stable_diffusion_windows_py/source.zip

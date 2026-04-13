@@ -4,12 +4,12 @@
 # ---------------------------------------------------------------------
 from __future__ import annotations
 
-from datetime import datetime
+import warnings
 
 from packaging.version import Version
 from pydantic import model_validator
 
-from qai_hub_apps import __version__
+from qai_hub_apps import __version__, _is_dev
 from qai_hub_apps.configs.app_yaml import AppInfo
 from qai_hub_apps.configs.base_config import BaseConfig
 
@@ -17,8 +17,7 @@ from qai_hub_apps.configs.base_config import BaseConfig
 class AppRegistry(BaseConfig):
     schema_version: str
     min_cli_version: str
-    version: str
-    generated_at: datetime
+    version: str | None = None
     apps: list[AppInfo]
 
     @model_validator(mode="after")
@@ -31,14 +30,32 @@ class AppRegistry(BaseConfig):
 
     @model_validator(mode="after")
     def _check_cli_version(self) -> AppRegistry:
+        if self.version is None:
+            msg = (
+                "Registry has no version (dev registry). "
+                "Use generate_registry --upload to produce a versioned registry."
+            )
+            if _is_dev():
+                warnings.warn(msg, stacklevel=2)
+            else:
+                raise ValueError(
+                    "Registry is missing a version. "
+                    "The registry may be corrupt. Please upgrade: pip install -U qai-hub-apps"
+                )
+            return self
+
         cli = Version(__version__)
         for required, reason in [
             (self.min_cli_version, f"requires qai-hub-apps >= {self.min_cli_version}"),
             (self.version, f"was released with qai-hub-apps {self.version}"),
         ]:
             if cli < Version(required):
-                raise ValueError(
+                msg = (
                     f"This registry {reason}, "
                     f"but you have {__version__}. Please upgrade: pip install -U qai-hub-apps"
                 )
+                if _is_dev():
+                    warnings.warn(msg, stacklevel=2)
+                else:
+                    raise ValueError(msg)
         return self

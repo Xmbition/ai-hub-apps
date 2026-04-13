@@ -52,4 +52,4 @@ class AppInfo(BaseConfig):
     languages: list[AppLanguage] = []
     model_file_path: str = ""
     environment: EnvironmentConfig | None = None
-    url: AppUrl
+    url: AppUrl | None = None

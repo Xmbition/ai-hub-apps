@@ -4,8 +4,6 @@
 # ---------------------------------------------------------------------
 from __future__ import annotations
 
-from datetime import datetime
-
 from pydantic import ConfigDict
 from qai_hub_models.utils.base_config import BaseQAIHMConfig
 
@@ -25,8 +23,7 @@ class AppRegistry(BaseQAIHMConfig):
 
     schema_version: str
     min_cli_version: str
-    version: str
-    generated_at: datetime
+    version: str | None = None
     apps: list[QAIHACLIAppInfo]
 
     @staticmethod

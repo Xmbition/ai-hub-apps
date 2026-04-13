@@ -14,6 +14,14 @@ CACHE_ROOT = Path(user_cache_dir("qaiha"))
 APPS_ROOT = REPOSITORY_ROOT / "apps"
 MAX_APP_SEARCH_DEPTH = 3
 
+_REPO_MARKERS = ("apps", "cli", "tools")
+if not all((REPOSITORY_ROOT / m).exists() for m in _REPO_MARKERS):
+    raise ImportError(
+        "qai_hub_apps_test must be installed in editable mode from the repository root.\n"
+        f"Expected to find {_REPO_MARKERS} under '{REPOSITORY_ROOT}', but they were not found.\n"
+        "Install with: pip install -e tools/python/"
+    )
+
 
 def is_app_root(path: str | os.PathLike) -> bool:
     return (Path(path) / "info.yaml").exists()
@@ -65,3 +73,39 @@ def get_all_apps(
     An app root is identified by whether it contains an `info.yaml` that can be parsed by QIAHAAppInfo.
     """
     return _get_all_apps(apps_root, APPS_ROOT / subdir if subdir else APPS_ROOT, 0)
+
+
+@lru_cache
+def find_app_dir(app_id: str) -> Path:
+    """
+    Find the absolute path to an app directory given its app ID.
+
+    Parameters
+    ----------
+    app_id:
+        The app ID as defined in the app's info.yaml (the ``id`` field).
+
+    Returns
+    -------
+    Path
+        Absolute path to the app's root directory.
+
+    Raises
+    ------
+    ValueError
+        If no app with the given ID is found under APPS_ROOT.
+    """
+    # Local import to avoid circular dependency:
+    # configs/info_yaml.py already imports from utils/paths (APPS_ROOT, REPOSITORY_ROOT),
+    # so a top-level import here would create a cycle.
+    from qai_hub_apps_test.configs.info_yaml import QAIHAAppInfo
+
+    for rel_path in get_all_apps():
+        info, app_dir = QAIHAAppInfo.from_app(rel_path)
+        if info.id == app_id:
+            return app_dir
+    raise ValueError(
+        f"No app with ID '{app_id}' found under '{APPS_ROOT}'. "
+        "Check that the app directory exists and its info.yaml contains "
+        f"the field 'id: {app_id}'."
+    )

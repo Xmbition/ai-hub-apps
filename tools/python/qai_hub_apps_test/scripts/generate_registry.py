@@ -6,14 +6,12 @@ from __future__ import annotations
 
 import sys
 import tempfile
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from tap import Tap
 
-from qai_hub_apps_test.bundlers import Bundler
-from qai_hub_apps_test.bundlers import python as python_bundler
+from qai_hub_apps_test.bundlers import bundle_app
 from qai_hub_apps_test.configs.asset_bases_yaml import AssetBases
 from qai_hub_apps_test.configs.info_yaml import (
     AppLanguage,
@@ -42,11 +40,8 @@ class GenerateRegistryParser(Tap):
     min_cli_version: str = "0.0.1"  # Minimum CLI version required to use this registry
     ref: str = "main"  # Git ref (branch or tag) used to construct GitHub URLs
 
-    cli_version: str = _read_cli_version()  # CLI version used for zip path / S3 path
-    upload: bool = False  # Upload zips to S3 (default: write locally)
-    zips_dir: Path | None = (
-        None  # Local zip output dir (default: output_dir/zips); only used when not uploading
-    )
+    cli_version: str = _read_cli_version()  # CLI version used for S3 path
+    upload: bool = False  # Upload zips to S3; without this, list apps without bundling
 
 
 def _resolve_repo_url(info: QAIHAAppInfo, repo_base: str, ref: str) -> str:
@@ -58,17 +53,6 @@ def _resolve_repo_url(info: QAIHAAppInfo, repo_base: str, ref: str) -> str:
     if info.app_repo_url:
         return info.app_repo_url
     return f"{repo_base}/tree/{ref}/apps/{info.app_repo_relative_path}"
-
-
-def build_app(
-    app_dir: Path,
-    output_dir: Path,
-    sdk_parent: Path,
-    bundler: Bundler,
-) -> Path:
-    """Bundle an app into a zip in output_dir. Returns the zip path."""
-    bundler(app_dir, output_dir, sdk_parent, make_zip=True)
-    return output_dir / f"{app_dir.name}.zip"
 
 
 def upload_app(
@@ -125,19 +109,30 @@ def main() -> None:
                 sys.exit("Aborted.")
         bucket, _ = get_qaihm_s3(QAIHM_PUBLIC_S3_BUCKET, requires_admin=False)
 
-    sdk_parent = python_bundler.resolve_sdk_root(None)
     bundled_apps: list[QAIHAAppInfo] = []
 
     if args.upload:
-        context: Any = tempfile.TemporaryDirectory()
+        with tempfile.TemporaryDirectory() as build_dir:
+            build_path = Path(build_dir)
+            for info, app_dir in public_apps:
+                print(f"\n{f' {info.id} ':─^60}")
+                if AppLanguage.PYTHON not in info.languages:
+                    print(
+                        f"Skipping: not a Python app "
+                        f"(languages={[l.value for l in info.languages]})"
+                    )
+                    continue
+                bundle_app(app_dir, build_path, make_zip=True)
+                zip_path = build_path / f"{app_dir.name}.zip"
+                upload_app(zip_path, info.id, bucket, s3_prefix, args.cli_version)
+                source_url = (
+                    f"{s3_base}/{s3_prefix}/{args.cli_version}/{info.id}/source.zip"
+                )
+                bundled_apps.append(
+                    info.model_copy(update={"url": AppUrl(source=source_url)})
+                )
     else:
-        zips_dir = (args.zips_dir or args.output_dir / "zips") / args.cli_version
-        zips_dir.mkdir(parents=True, exist_ok=True)
-        context = _NullContext(zips_dir)
-
-    with context as build_dir:
-        build_path = Path(build_dir)
-        for info, app_dir in public_apps:
+        for info, _ in public_apps:
             print(f"\n{f' {info.id} ':─^60}")
             if AppLanguage.PYTHON not in info.languages:
                 print(
@@ -145,55 +140,22 @@ def main() -> None:
                     f"(languages={[l.value for l in info.languages]})"
                 )
                 continue
-
-            if args.upload:
-                zip_path = build_app(
-                    app_dir, build_path, sdk_parent, python_bundler.bundle
-                )
-                upload_app(zip_path, info.id, bucket, s3_prefix, args.cli_version)
-                source_url = (
-                    f"{s3_base}/{s3_prefix}/{args.cli_version}/{info.id}/source.zip"
-                )
-            else:
-                app_zip_dir = build_path / info.id
-                app_zip_dir.mkdir(parents=True, exist_ok=True)
-                zip_path = build_app(
-                    app_dir, app_zip_dir, sdk_parent, python_bundler.bundle
-                )
-                final_path = app_zip_dir / "source.zip"
-                zip_path.rename(final_path)
-                source_url = final_path.resolve().as_uri()
-                print(f"Saved to {final_path}")
-
-            bundled_apps.append(
-                info.model_copy(update={"url": AppUrl(source=source_url)})
-            )
+            bundled_apps.append(info)
+            print("Registered (no bundle)")
 
     registry = AppRegistry(
         schema_version=args.schema_version,
         min_cli_version=args.min_cli_version,
-        version=args.cli_version,
-        generated_at=datetime.utcnow(),
+        version=args.cli_version if args.upload else None,
         apps=bundled_apps,
     )
     registry.to_yaml(args.output_dir / "registry.yaml", write_if_empty=True)
+    action = "Uploaded" if args.upload else "Registered"
     print(
         f"\n{'  Summary  ':=^60}"
-        f"\nBundled {len(bundled_apps)} app(s) out of {len(public_apps)} public app(s) to {args.output_dir / 'registry.yaml'}"
+        f"\n{action} {len(bundled_apps)} app(s) out of {len(public_apps)} public app(s) "
+        f"to {args.output_dir / 'registry.yaml'}"
     )
-
-
-class _NullContext:
-    """Minimal context manager that yields a fixed path (no cleanup)."""
-
-    def __init__(self, path: Path) -> None:
-        self._path = path
-
-    def __enter__(self) -> Path:
-        return self._path
-
-    def __exit__(self, *_: object) -> None:
-        pass
 
 
 if __name__ == "__main__":

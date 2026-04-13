@@ -4,16 +4,15 @@
 # ---------------------------------------------------------------------
 from __future__ import annotations
 
-import zipfile
 from collections.abc import ValuesView
 from pathlib import Path
 from typing import Any
-from urllib.parse import unquote, urlparse
 
 from qai_hub_models_cli.fetch import get_asset_url
 from qai_hub_models_cli.utils import download
 from qai_hub_models_cli.versions import CURRENT_VERSION as QAIHM_VERSION
 
+from qai_hub_apps import _is_dev
 from qai_hub_apps.configs.app_yaml import AppInfo, AppLanguage
 from qai_hub_apps.configs.model_asset import ModelAsset
 from qai_hub_apps.configs.registry_yaml import AppRegistry
@@ -21,6 +20,7 @@ from qai_hub_apps.errors import (
     AppIncompatibleError,
     AppNotFoundError,
     ModelAssetNotFoundError,
+    QAIHubAppsError,
 )
 from qai_hub_apps.validate import is_app_supported
 
@@ -43,14 +43,28 @@ class App:
         """Download and extract app source. Returns the extraction path."""
         app_dest = dest / self.id
 
-        source = self.url.source
-        print(f"Fetching from: {source}")
-        if source.startswith("file://"):
-            local_path = Path(unquote(urlparse(source).path))
-            app_dest.mkdir(parents=True, exist_ok=True)
-            with zipfile.ZipFile(local_path) as zf:
-                zf.extractall(app_dest)
+        has_url = self.url is not None
+        if not has_url and _is_dev():
+            # Dev install + no URL: bundle from source on-the-fly
+            try:
+                from qai_hub_apps_test.bundlers import bundle_app as _bundle_app
+            except ImportError:
+                raise QAIHubAppsError(
+                    "Dev install detected but qai_hub_apps_test is not installed. "
+                    "Install it with: pip install -e tools/python/"
+                ) from None
+            print(f"Dev install: bundling '{self.id}' from source...")
+            _bundle_app(self.id, dest, make_zip=False)
+            # bundle_app with make_zip=False writes to dest/<app_id>/ == app_dest
+        elif not has_url and not _is_dev():
+            raise QAIHubAppsError(
+                "No source URL found in registry. "
+                "The registry may be outdated. Please upgrade: pip install -U qai-hub-apps"
+            )
         else:
+            # URL present (dev or prod): download from registry URL
+            source = self.url.source
+            print(f"Fetching from: {source}")
             app_dest = download(source, app_dest, extract=True)
 
         if model_asset is not None:
@@ -144,7 +158,7 @@ class Registry:
 
     @property
     def version(self) -> str:
-        return self._raw.version
+        return self._raw.version or "dev"
 
     def fetch_app(
         self,
