@@ -144,7 +144,7 @@ class Registry:
 
     @classmethod
     def load_bundled(cls) -> Registry:
-        return cls.load(Path(__file__).parent.parent / "configs" / "registry.yaml")
+        return cls.load(Path(__file__).parent.parent / "registry.yaml")
 
     @property
     def apps(self) -> ValuesView[App]:

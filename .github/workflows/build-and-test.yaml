@@ -98,3 +98,14 @@ jobs:
           echo "Please run: python -m qai_hub_apps_test.scripts.generate_registry --output_dir cli/qai_hub_apps/"
           exit 1
         fi
+
+  ##
+  ## CLI unit + integration tests
+  ##
+  cli_tests:
+    name: "CLI Tests"
+    if: ${{ inputs.do_all || inputs.do_precommit }}
+    uses: ./.github/workflows/cli-tests.yaml
+    with:
+      do_all: ${{ inputs.do_all }}
+      do_precommit: ${{ inputs.do_precommit }}

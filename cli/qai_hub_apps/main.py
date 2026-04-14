@@ -85,9 +85,9 @@ def main() -> None:
     registry = getattr(args, "registry", None)
     registry_path = registry or Path(__file__).parent / "registry.yaml"
 
-    if args.command not in (None, "list", "info", "fetch"):
+    if args.command not in ("list", "info", "fetch"):
         parser.print_help()
-        sys.exit(1)
+        return
 
     try:
         if not registry_path.exists():
@@ -95,9 +95,7 @@ def main() -> None:
 
         registry = Registry.load(registry_path)
 
-        if args.command is None:
-            parser.print_help()
-        elif args.command == "list":
+        if args.command == "list":
             run_list(registry)
         elif args.command == "info":
             run_info(args.app_id, registry)
@@ -113,5 +111,5 @@ def main() -> None:
         sys.exit(1)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

@@ -1,0 +1,50 @@
+##
+## Re-usable workflow for running CLI test suites.
+## Do not attempt to change the triggers on this workflow.
+##
+
+name: CLI Tests
+
+env:
+  PYTHON_VERSION: '3.10'
+  PYTHONUNBUFFERED: 1
+
+on:
+  workflow_call:
+    inputs:
+      do_all:
+        required: true
+        type: boolean
+
+      do_precommit:
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  ##
+  ## CLI unit + integration tests
+  ##
+  cli_tests:
+    name: "CLI Tests"
+    if: ${{ inputs.do_all || inputs.do_precommit }}
+    runs-on: [tetra-ubuntu-2204, self-hosted]
+
+    steps:
+    - uses: actions/checkout@v6
+    - id: setup_python
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install Deps
+      run: |
+        ${{ steps.setup_python.outputs.python-path }} -m pip install -e 'cli/[test]'
+
+    - name: Run CLI Tests
+      run: |
+        cd cli && ${{ steps.setup_python.outputs.python-path }} -m pytest \
+          -vv \
+          --tb=short \
+          --strict-markers \
+          --color=yes

@@ -36,6 +36,17 @@ include = ["qai_hub_apps*"]
 root = ".."
 version_file = "qai_hub_apps/_version.py"
 
+[project.optional-dependencies]
+test = ["pytest", "pytest-mock", "pytest-cov"]
+
+[tool.pytest.ini_options]
+python_files = ["*_test.py"]
+testpaths = ["qai_hub_apps"]
+addopts = "--cov=qai_hub_apps --cov-report=term-missing --cov-fail-under=100"
+
+[tool.coverage.report]
+omit = ["*_test.py"]
+
 [tool.pydoclint]
 style = 'numpy'
 arg-type-hints-in-docstring = false
