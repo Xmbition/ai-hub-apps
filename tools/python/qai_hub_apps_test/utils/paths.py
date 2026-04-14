@@ -36,7 +36,7 @@ def _get_all_apps(
         return []
 
     app_dirs = []
-    for filename in os.listdir(root):
+    for filename in sorted(os.listdir(root)):
         path = Path(root) / filename
         if os.path.isdir(path):
             if is_app_root(path):

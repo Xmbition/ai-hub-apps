@@ -63,3 +63,38 @@ jobs:
       id: pre-commit
       run: |
         source ${{ env.VENV_PATH }}/bin/activate && pre-commit run --show-diff-on-failure --color=always --all-files
+
+  ##
+  ## Registry freshness check
+  ##
+  check_registry:
+    name: "Check registry.yaml is up to date"
+    if: ${{ inputs.do_all || inputs.do_precommit }}
+    runs-on: [tetra-ubuntu-2204, self-hosted]
+    env:
+      VENV_PATH: qaiha-dev
+    steps:
+    - uses: actions/checkout@v6
+    - id: setup_python
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install Deps
+      env:
+        SUDO_PASSWORD: ${{ secrets.TETRASERVICE_PASSWORD }}
+      run: |
+        bash tools/setup_env.sh --python="${{ steps.setup_python.outputs.python-path }}" --venv="${{ env.VENV_PATH }}"
+
+    - name: Check registry.yaml
+      run: |
+        source ${{ env.VENV_PATH }}/bin/activate
+        python -m qai_hub_apps_test.scripts.generate_registry --output_dir cli/qai_hub_apps/
+        if [[ -n $(git diff) || -n $(git ls-files --others --exclude-standard) ]]; then
+          git diff
+          git ls-files --others --exclude-standard
+          echo ""
+          echo "registry.yaml is out of date."
+          echo "Please run: python -m qai_hub_apps_test.scripts.generate_registry --output_dir cli/qai_hub_apps/"
+          exit 1
+        fi

@@ -1,21 +1,6 @@
 schema_version: '1.0'
 min_cli_version: 0.0.1
 apps:
-- name: Whisper Windows
-  id: whisper_windows_py
-  status: published
-  headline: Bring speech-to-text on device for Windows
-  description: A sample CLI app demonstrating how to run Whisper, a state-of-the-art speech-to-text solution, using the ONNX execution provider. Designed for learning, it showcases efficient on-device processing optimized for the Snapdragon® Neural Processing Unit (NPU).
-  domain: Audio
-  use_case: Speech Recognition
-  app_repo_url: https://github.com/qualcomm/ai-hub-apps/tree/main/apps/whisper_windows_py
-  app_type: windows
-  runtime: onnx
-  related_models:
-  - whisper_base
-  precisions:
-  - float
-  model_file_path: models
 - name: MediaPipe Hand Gesture Recognition
   id: mediapipe_hand_gesture_ubuntu
   status: published
@@ -45,4 +30,19 @@ apps:
   - stable_diffusion_v2_1
   precisions:
   - w8a16
+  model_file_path: models
+- name: Whisper Windows
+  id: whisper_windows_py
+  status: published
+  headline: Bring speech-to-text on device for Windows
+  description: A sample CLI app demonstrating how to run Whisper, a state-of-the-art speech-to-text solution, using the ONNX execution provider. Designed for learning, it showcases efficient on-device processing optimized for the Snapdragon® Neural Processing Unit (NPU).
+  domain: Audio
+  use_case: Speech Recognition
+  app_repo_url: https://github.com/qualcomm/ai-hub-apps/tree/main/apps/whisper_windows_py
+  app_type: windows
+  runtime: onnx
+  related_models:
+  - whisper_base
+  precisions:
+  - float
   model_file_path: models

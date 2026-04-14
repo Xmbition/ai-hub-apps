@@ -46,4 +46,3 @@ apps/android/ChatApp/src/main/cpp/json.hpp
 
 # Automatically generated when the package is built
 cli/qai_hub_apps/_version.py
-cli/qai_hub_apps/registry.yaml
