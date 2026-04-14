@@ -12,6 +12,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Matrix;
 import android.graphics.Bitmap;
+import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.graphics.SurfaceTexture;
@@ -179,6 +180,7 @@ public class CameraFragment extends Fragment
      */
     private int mDeviceOrientation;
     private int mFinalRotation;
+    private static final float PREVIEW_SCALE = 0.62f;
 
     /**
      * Given {@code choices} of {@code Size}s supported by a camera, choose the smallest one that
@@ -319,8 +321,11 @@ public class CameraFragment extends Fragment
                 }
 
                 // Select camera feed image size to be close to the target size
-                mPreviewSize = chooseOptimalSize(surfaceSizes, targetWidth, targetHeight);
+
+                mPreviewSize = chooseOptimalSize(surfaceSizes, (int)(targetWidth*PREVIEW_SCALE), (int)(targetHeight*PREVIEW_SCALE));
                 mCameraId = cameraId;
+                Log.i("CameraFragment", "target=" + targetWidth + "x" + targetHeight
+                        + ", preview=" + mPreviewSize.getWidth() + "x" + mPreviewSize.getHeight());
                 return;
             }
         } catch (CameraAccessException e) {
@@ -422,7 +427,7 @@ public class CameraFragment extends Fragment
             float dy = (viewHeight - scaledHeight) / 2;
 
             Matrix matrix = new Matrix();
-            matrix.setScale(scaleX * 0.25f, scaleY);
+            matrix.setScale(scaleX, scaleY);
             matrix.postTranslate(dx, dy);
 
             mTextureView.setTransform(matrix);
@@ -613,6 +618,15 @@ public class CameraFragment extends Fragment
                 mFinalRotation = orient;
 
                 detector.predict(mBitmap, orient, BBlist);
+                double inferMs = detector.getLastInferenceTime() / 1_000_000.0;
+                double preMs   = detector.getLastPreprocessingTime() / 1_000_000.0;
+                double postMs  = detector.getLastPostprocessingTime() / 1_000_000.0;
+
+                Log.i("ObjectDetection",
+                        String.format(
+                                "infer=%.2f ms, pre=%.2f ms, post=%.2f ms, fps=%.2f",
+                                inferMs, preMs, postMs, fps
+                        ));
                 mFragmentRender.setCoordsList(BBlist);
                 mFragmentRender.render(
                         mBitmap,
