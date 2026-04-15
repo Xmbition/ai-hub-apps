@@ -13,6 +13,11 @@ from qai_hub_models_cli.utils import download
 from qai_hub_models_cli.versions import CURRENT_VERSION as QAIHM_VERSION
 
 from qai_hub_apps import _is_dev
+
+try:
+    from qai_hub_apps_test.bundlers import bundle_app as _bundle_app
+except ImportError:  # pragma: no cover
+    _bundle_app = None
 from qai_hub_apps.configs.app_yaml import AppInfo, AppLanguage
 from qai_hub_apps.configs.model_asset import ModelAsset
 from qai_hub_apps.configs.registry_yaml import AppRegistry
@@ -46,13 +51,11 @@ class App:
         has_url = self.url is not None
         if not has_url and _is_dev():
             # Dev install + no URL: bundle from source on-the-fly
-            try:
-                from qai_hub_apps_test.bundlers import bundle_app as _bundle_app
-            except ImportError:
+            if _bundle_app is None:
                 raise QAIHubAppsError(
                     "Dev install detected but qai_hub_apps_test is not installed. "
                     "Install it with: pip install -e tools/python/"
-                ) from None
+                )
             print(f"Dev install: bundling '{self.id}' from source...")
             _bundle_app(self.id, dest, make_zip=False)
             # bundle_app with make_zip=False writes to dest/<app_id>/ == app_dest

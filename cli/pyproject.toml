@@ -42,10 +42,13 @@ test = ["pytest", "pytest-mock", "pytest-cov"]
 [tool.pytest.ini_options]
 python_files = ["*_test.py"]
 testpaths = ["qai_hub_apps"]
-addopts = "--cov=qai_hub_apps --cov-report=term-missing --cov-fail-under=100"
+addopts = "--cov=qai_hub_apps --cov-report=term-missing --cov-fail-under=100 -m 'not integration'"
+markers = [
+    "integration: end-to-end tests that exercise the full CLI stack (run with -m integration)",
+]
 
 [tool.coverage.report]
-omit = ["*_test.py"]
+omit = ["*_test.py", "*conftest.py"]
 
 [tool.pydoclint]
 style = 'numpy'

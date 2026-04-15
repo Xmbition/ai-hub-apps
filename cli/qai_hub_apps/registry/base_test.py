@@ -4,8 +4,6 @@
 # ---------------------------------------------------------------------
 from __future__ import annotations
 
-import sys
-from types import ModuleType
 from unittest.mock import MagicMock
 
 import pytest
@@ -128,9 +126,7 @@ def test_fetch_dev_no_url_calls_bundle_app(monkeypatch, tmp_path):
     monkeypatch.setattr("qai_hub_apps.registry.base._is_dev", lambda: True)
 
     mock_bundle_app = MagicMock()
-    mock_module = ModuleType("qai_hub_apps_test.bundlers")
-    mock_module.bundle_app = mock_bundle_app  # type: ignore[attr-defined]
-    monkeypatch.setitem(sys.modules, "qai_hub_apps_test.bundlers", mock_module)
+    monkeypatch.setattr("qai_hub_apps.registry.base._bundle_app", mock_bundle_app)
 
     mock_download = MagicMock()
     monkeypatch.setattr("qai_hub_apps.registry.base.download", mock_download)
@@ -145,9 +141,7 @@ def test_fetch_dev_no_url_calls_bundle_app(monkeypatch, tmp_path):
 
 def test_fetch_dev_no_url_missing_bundler_raises(monkeypatch, tmp_path):
     monkeypatch.setattr("qai_hub_apps.registry.base._is_dev", lambda: True)
-    # Remove the module so the import inside fetch() fails
-    monkeypatch.delitem(sys.modules, "qai_hub_apps_test.bundlers", raising=False)
-    monkeypatch.setitem(sys.modules, "qai_hub_apps_test.bundlers", None)
+    monkeypatch.setattr("qai_hub_apps.registry.base._bundle_app", None)
 
     info = make_app_info(url=None)
     app = App(info)
