@@ -23,7 +23,7 @@ def main() -> None:
     )
     parser = argparse.ArgumentParser(
         prog="qai-hub-apps",
-        description="CLI for managing and deploying Qualcomm® AI Hub Apps.",
+        description="CLI for browsing and downloading Qualcomm® AI Hub Apps.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=epilog,
     )

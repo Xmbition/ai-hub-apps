@@ -7,7 +7,7 @@ name = "qai-hub-apps"
 authors = [
     {name = "Qualcomm® Technologies, Inc", email = "ai_hub_support@qti.qualcomm.com"},
 ]
-description = "CLI for managing and deploying Qualcomm® AI Hub Apps."
+description = "CLI for browsing and downloading Qualcomm® AI Hub Apps."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "BSD-3-Clause"
