@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # ---------------------------------------------------------------------
 
+from __future__ import annotations
+
 import configparser
 import contextlib
 import functools
@@ -11,10 +13,14 @@ import os
 import shutil
 import subprocess
 import sys
+from typing import TYPE_CHECKING
 
 import boto3
 import botocore
 import botocore.exceptions
+
+if TYPE_CHECKING:
+    from mypy_boto3_sts import STSClient
 
 PROFILE = "qaihm"
 REGION = "us-west-2"
@@ -127,8 +133,8 @@ def add_default_credentials_section() -> None:
 
 @functools.cache
 def credentials_valid() -> bool:
-    session = boto3.Session(profile_name=PROFILE)
-    sts_client = session.client("sts")
+    session: boto3.Session = boto3.Session(profile_name=PROFILE)
+    sts_client: STSClient = session.client("sts")
 
     try:
         sts_client.get_caller_identity()

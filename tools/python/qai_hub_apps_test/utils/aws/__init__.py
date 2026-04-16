@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # ---------------------------------------------------------------------
 
+from __future__ import annotations
+
 from collections.abc import Callable
 from typing import TYPE_CHECKING, TypeVar
 
@@ -43,7 +45,7 @@ def attempt_with_s3_credentials_warning(
         raise
 
 
-def s3_download(bucket: "Bucket", key: str, local_file_path: str) -> None:
+def s3_download(bucket: Bucket, key: str, local_file_path: str) -> None:
     """Download file at s3://<bucket>/<key> to local_file_path."""
     obj = bucket.Object(key)
     with tqdm.tqdm(total=obj.content_length, unit="B", unit_scale=True) as t:
@@ -56,9 +58,7 @@ def s3_download(bucket: "Bucket", key: str, local_file_path: str) -> None:
             t.update(obj.content_length)
 
 
-def get_qaihm_s3(
-    bucket_name: str, requires_admin: bool = False
-) -> tuple["Bucket", bool]:
+def get_qaihm_s3(bucket_name: str, requires_admin: bool = False) -> tuple[Bucket, bool]:
     """
     Get boto3 objects for interacting with the given bucket using QAIHM credentials.
     Throws if credentials do not exist
@@ -83,7 +83,7 @@ def get_qaihm_s3(
         exception_msg = "Could not find valid AWS profile. Run <repo_root>/scripts/build_and_test.py --task validate_aws_credentials"
 
     try:
-        session = boto3.Session(profile_name=profile_name)
+        session: boto3.Session = boto3.Session(profile_name=profile_name)
         bucket = session.resource("s3").Bucket(bucket_name)
         return bucket, False
     except Exception as e:
