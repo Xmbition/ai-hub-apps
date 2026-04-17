@@ -393,7 +393,7 @@ def main(args: argparse.Namespace) -> None:
     delegate_path = "libQnnTFLiteDelegate.so"
 
     hand_detector = Interpreter(
-        "models/PalmDetector.tflite",
+        "models/palm_detector.tflite",
         experimental_delegates=[
             Delegate(
                 delegate_path,
@@ -406,7 +406,7 @@ def main(args: argparse.Namespace) -> None:
         ],
     )
     landmark_detector = Interpreter(
-        "models/HandLandmarkDetector.tflite",
+        "models/hand_landmark_detector.tflite",
         experimental_delegates=[
             Delegate(
                 delegate_path,
@@ -419,7 +419,7 @@ def main(args: argparse.Namespace) -> None:
         ],
     )
 
-    gesture_classifier = Interpreter("models/CannedGestureClassifier.tflite")
+    gesture_classifier = Interpreter("models/canned_gesture_classifier.tflite")
 
     hand_detector.allocate_tensors()
     landmark_detector.allocate_tensors()

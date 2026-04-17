@@ -17,5 +17,5 @@ os:
 languages: ['Python']
 use_case: 'Image Generation'
 related_models: [stable_diffusion_v2_1]
-model_file_path: 'models'
+model_file_path: 'model'
 skip_test: infra doesn't support building python app. CLI will fix https://github.com/qcom-ai-hub/tetracode/issues/17462
