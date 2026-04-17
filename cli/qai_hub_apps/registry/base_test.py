@@ -4,6 +4,7 @@
 # ---------------------------------------------------------------------
 from __future__ import annotations
 
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -89,53 +90,57 @@ def test_registry_load_fresh_after_reset(sample_registry_yaml):
     assert r1 is not r2
 
 
+def _fake_download(url: str, path: Path, extract: bool = False) -> Path:
+    """Test helper: simulate download by creating the destination directory."""
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
 def test_fetch_with_url_calls_download(monkeypatch, tmp_path):
     dest = tmp_path / "output"
     dest.mkdir()
-    extracted = dest / "test_app"
-    mock_download = MagicMock(return_value=extracted)
-    monkeypatch.setattr("qai_hub_apps.registry.base.download", mock_download)
+    monkeypatch.setattr("qai_hub_apps.registry.base.download", _fake_download)
     monkeypatch.setattr("qai_hub_apps.registry.base._is_dev", lambda: False)
 
     info = make_app_info(url=AppUrl(source="https://example.com/app.zip"))
     app = App(info)
     result = app.fetch(dest)
 
-    mock_download.assert_called_once_with(
-        "https://example.com/app.zip", dest / "test_app", extract=True
-    )
-    assert result == extracted
+    assert result == dest / "test_app"
+    assert result.exists()
 
 
 def test_fetch_with_url_dev_also_uses_download(monkeypatch, tmp_path):
     """URL present in dev mode → still downloads normally."""
     dest = tmp_path / "output"
     dest.mkdir()
-    extracted = dest / "test_app"
-    mock_download = MagicMock(return_value=extracted)
-    monkeypatch.setattr("qai_hub_apps.registry.base.download", mock_download)
+    monkeypatch.setattr("qai_hub_apps.registry.base.download", _fake_download)
     monkeypatch.setattr("qai_hub_apps.registry.base._is_dev", lambda: True)
 
     info = make_app_info(url=AppUrl(source="https://example.com/app.zip"))
     app = App(info)
-    app.fetch(dest)
-    mock_download.assert_called_once()
+    result = app.fetch(dest)
+    assert result == dest / "test_app"
+    assert result.exists()
 
 
 def test_fetch_dev_no_url_calls_bundle_app(monkeypatch, tmp_path):
     monkeypatch.setattr("qai_hub_apps.registry.base._is_dev", lambda: True)
 
-    mock_bundle_app = MagicMock()
-    monkeypatch.setattr("qai_hub_apps.registry.base._bundle_app", mock_bundle_app)
+    def fake_bundle_app(app_id: str, dest: Path, make_zip: bool = True) -> None:
+        (dest / app_id).mkdir(parents=True, exist_ok=True)
+
+    monkeypatch.setattr("qai_hub_apps.registry.base._bundle_app", fake_bundle_app)
 
     mock_download = MagicMock()
     monkeypatch.setattr("qai_hub_apps.registry.base.download", mock_download)
 
     info = make_app_info(url=None)
     app = App(info)
-    app.fetch(tmp_path)
+    result = app.fetch(tmp_path)
 
-    mock_bundle_app.assert_called_once_with("test_app", tmp_path, make_zip=False)
+    assert result == tmp_path / "test_app"
+    assert result.exists()
     mock_download.assert_not_called()
 
 
@@ -158,10 +163,7 @@ def test_fetch_prod_no_url_raises(monkeypatch, tmp_path):
 
 
 def test_fetch_model_not_in_related_models_raises(monkeypatch, tmp_path):
-    monkeypatch.setattr(
-        "qai_hub_apps.registry.base.download",
-        MagicMock(return_value=tmp_path / "test_app"),
-    )
+    monkeypatch.setattr("qai_hub_apps.registry.base.download", _fake_download)
     monkeypatch.setattr("qai_hub_apps.registry.base._is_dev", lambda: False)
 
     info = make_app_info(
@@ -176,10 +178,7 @@ def test_fetch_model_not_in_related_models_raises(monkeypatch, tmp_path):
 
 
 def test_fetch_no_model_file_path_raises(monkeypatch, tmp_path):
-    monkeypatch.setattr(
-        "qai_hub_apps.registry.base.download",
-        MagicMock(return_value=tmp_path / "test_app"),
-    )
+    monkeypatch.setattr("qai_hub_apps.registry.base.download", _fake_download)
     monkeypatch.setattr("qai_hub_apps.registry.base._is_dev", lambda: False)
 
     info = make_app_info(
@@ -194,10 +193,7 @@ def test_fetch_no_model_file_path_raises(monkeypatch, tmp_path):
 
 
 def test_fetch_model_asset_not_found_raises(monkeypatch, tmp_path):
-    monkeypatch.setattr(
-        "qai_hub_apps.registry.base.download",
-        MagicMock(return_value=tmp_path / "test_app"),
-    )
+    monkeypatch.setattr("qai_hub_apps.registry.base.download", _fake_download)
     monkeypatch.setattr("qai_hub_apps.registry.base._is_dev", lambda: False)
     monkeypatch.setattr(
         "qai_hub_apps.registry.base.get_asset_url",
@@ -216,10 +212,7 @@ def test_fetch_model_asset_not_found_raises(monkeypatch, tmp_path):
 
 
 def test_fetch_model_asset_success(monkeypatch, tmp_path):
-    app_dest = tmp_path / "test_app"
-    app_dest.mkdir()
-    mock_download = MagicMock(side_effect=[app_dest, None])
-    monkeypatch.setattr("qai_hub_apps.registry.base.download", mock_download)
+    monkeypatch.setattr("qai_hub_apps.registry.base.download", _fake_download)
     monkeypatch.setattr("qai_hub_apps.registry.base._is_dev", lambda: False)
     monkeypatch.setattr(
         "qai_hub_apps.registry.base.get_asset_url",
@@ -235,11 +228,72 @@ def test_fetch_model_asset_success(monkeypatch, tmp_path):
     asset = ModelAsset(model_id="test_model", chipset=None)
     result = app.fetch(tmp_path, model_asset=asset)
 
-    assert result == app_dest
-    assert mock_download.call_count == 2
-    # Second download is for the model into models_dir
-    second_call_dest = mock_download.call_args_list[1][0][1]
-    assert second_call_dest == app_dest / "models"
+    assert result == tmp_path / "test_app"
+    assert result.exists()
+    assert (result / "models").exists()
+
+
+def test_fetch_model_failure_leaves_no_dest(monkeypatch, tmp_path):
+    monkeypatch.setattr("qai_hub_apps.registry.base.download", _fake_download)
+    monkeypatch.setattr("qai_hub_apps.registry.base._is_dev", lambda: False)
+    monkeypatch.setattr(
+        "qai_hub_apps.registry.base.get_asset_url",
+        MagicMock(return_value="https://example.com/model.zip"),
+    )
+
+    def fail_model_download(url: str, path: Path, extract: bool = False) -> Path:
+        if "model" in url:
+            raise RuntimeError("model download failed")
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+
+    monkeypatch.setattr("qai_hub_apps.registry.base.download", fail_model_download)
+
+    info = make_app_info(
+        url=AppUrl(source="https://example.com/app.zip"),
+        related_models=["test_model"],
+        model_file_path="models",
+    )
+    app = App(info)
+    asset = ModelAsset(model_id="test_model", chipset=None)
+    with pytest.raises(RuntimeError):
+        app.fetch(tmp_path, model_asset=asset)
+
+    assert not (tmp_path / "test_app").exists()
+
+
+def test_fetch_model_asset_not_found_leaves_no_dest(monkeypatch, tmp_path):
+    monkeypatch.setattr("qai_hub_apps.registry.base.download", _fake_download)
+    monkeypatch.setattr("qai_hub_apps.registry.base._is_dev", lambda: False)
+    monkeypatch.setattr(
+        "qai_hub_apps.registry.base.get_asset_url",
+        MagicMock(side_effect=FileNotFoundError("not found")),
+    )
+
+    info = make_app_info(
+        url=AppUrl(source="https://example.com/app.zip"),
+        related_models=["test_model"],
+        model_file_path="models",
+    )
+    app = App(info)
+    asset = ModelAsset(model_id="test_model", chipset=None)
+    with pytest.raises(ModelAssetNotFoundError):
+        app.fetch(tmp_path, model_asset=asset)
+
+    assert not (tmp_path / "test_app").exists()
+
+
+def test_fetch_dest_exists_uses_next_free_path(monkeypatch, tmp_path):
+    (tmp_path / "test_app").mkdir()
+    monkeypatch.setattr("qai_hub_apps.registry.base.download", _fake_download)
+    monkeypatch.setattr("qai_hub_apps.registry.base._is_dev", lambda: False)
+
+    info = make_app_info(url=AppUrl(source="https://example.com/app.zip"))
+    app = App(info)
+    result = app.fetch(tmp_path)
+
+    assert result == tmp_path / "test_app-1"
+    assert result.exists()
 
 
 def test_detail_fields_contains_id_and_type():
@@ -275,10 +329,7 @@ def test_registry_apps_returns_all(sample_registry_yaml):
 
 
 def test_fetch_app_unsupported_platform_warns(monkeypatch, tmp_path, capsys):
-    monkeypatch.setattr(
-        "qai_hub_apps.registry.base.download",
-        MagicMock(return_value=tmp_path / "test_app"),
-    )
+    monkeypatch.setattr("qai_hub_apps.registry.base.download", _fake_download)
     monkeypatch.setattr("qai_hub_apps.registry.base._is_dev", lambda: False)
     monkeypatch.setattr(
         "qai_hub_apps.registry.base.is_app_supported", lambda app: False

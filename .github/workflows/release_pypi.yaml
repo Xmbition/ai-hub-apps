@@ -80,15 +80,17 @@ jobs:
           python -m qai_hub_apps_test.scripts.generate_registry --output_dir cli/qai_hub_apps/ --build_and_upload --ref ${{ github.ref_name }}
 
       - name: Build wheels
-        env:
-          # this is required because after the registry.yaml is generated, the working tree is dirty and setuptools_scm generates a dev version
-          SETUPTOOLS_SCM_PRETEND_VERSION: ${{ github.ref_name }}
         run: |
           source ${{ env.VENV_PATH }}/bin/activate
           pip install build
           rm -rf ${{env.CLI_EGG_INFO_DIR}}
           rm -f cli/build/wheel/*.whl
-          python -m build --wheel --outdir cli/build/wheel/ cli/
+
+          # strip leading 'v' — SETUPTOOLS_SCM_PRETEND_VERSION is used verbatim, unlike normal tag parsing
+          VERSION="${{ github.ref_name }}"
+
+          # this is required because after the registry.yaml is generated, the working tree is dirty and setuptools_scm generates a dev version
+          SETUPTOOLS_SCM_PRETEND_VERSION="${VERSION#v}" python -m build --wheel --outdir cli/build/wheel/ cli/
 
       - name: Upload to PyPI
         env:
