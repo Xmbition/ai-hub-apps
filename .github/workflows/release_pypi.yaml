@@ -43,6 +43,9 @@ jobs:
       needs: [approve]
       if: ${{ !cancelled() && (needs.approve.result == 'success' || needs.approve.result == 'skipped') }}
       runs-on: [tetra-ubuntu-2204, self-hosted]
+      permissions:
+        id-token: write
+        contents: read
       env:
         VENV_PATH: qaiha-dev
         CLI_EGG_INFO_DIR: "cli/qai_hub_apps.egg-info"
