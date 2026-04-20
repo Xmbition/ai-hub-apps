@@ -58,9 +58,12 @@ def sample_app_info() -> AppInfo:
 @pytest.fixture
 def sample_registry_yaml(tmp_path: Path) -> Path:
     """Write a minimal valid registry.yaml to a temp file and return its path."""
-    content = """\
+    from qai_hub_apps import __version__
+
+    content = f"""\
 schema_version: '1.0'
 min_cli_version: 0.0.1
+version: '{__version__}'
 apps:
 - name: Test App
   id: test_app

@@ -40,8 +40,16 @@ def test_make_app_returns_base_app_for_empty_languages():
     assert type(app) is App
 
 
-def test_registry_version_returns_dev_when_none(sample_registry_yaml):
-    registry = Registry.load(sample_registry_yaml)
+def test_registry_version_returns_dev_when_none(tmp_path, monkeypatch):
+    monkeypatch.setattr("qai_hub_apps.configs.registry_yaml._is_dev", lambda: True)
+    content = """\
+schema_version: '1.0'
+min_cli_version: 0.0.1
+apps: []
+"""
+    p = tmp_path / "registry.yaml"
+    p.write_text(content)
+    registry = Registry.load(p)
     assert registry.version == "dev"
 
 
