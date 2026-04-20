@@ -41,7 +41,7 @@ root = ".."
 version_file = "qai_hub_apps/_version.py"
 
 [project.optional-dependencies]
-test = ["pytest", "pytest-mock", "pytest-cov"]
+dev = ["pytest", "pytest-mock", "pytest-cov"]
 
 [tool.pytest.ini_options]
 python_files = ["*_test.py"]

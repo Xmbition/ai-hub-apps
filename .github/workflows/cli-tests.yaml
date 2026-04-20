@@ -39,7 +39,7 @@ jobs:
 
     - name: Install Deps
       run: |
-        ${{ steps.setup_python.outputs.python-path }} -m pip install -e 'cli/[test]'
+        ${{ steps.setup_python.outputs.python-path }} -m pip install -e 'cli/[dev]'
 
     - name: Run CLI Tests
       run: |
