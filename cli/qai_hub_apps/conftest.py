@@ -13,6 +13,13 @@ from qai_hub_apps.configs.app_yaml import AppInfo, AppLanguage, AppType
 from qai_hub_apps.registry.base import Registry
 
 
+def pytest_configure(config: pytest.Config) -> None:
+    config.addinivalue_line(
+        "markers",
+        "integration: end-to-end tests that exercise the full CLI stack (run with -m integration)",
+    )
+
+
 def make_app_info(**overrides) -> AppInfo:
     """Factory for AppInfo with sensible defaults. Accepts keyword overrides."""
     defaults: dict = dict(

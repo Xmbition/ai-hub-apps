@@ -6,12 +6,13 @@ import argparse
 import sys
 from pathlib import Path
 
-from qai_hub_apps import __version__
+from qai_hub_apps import __version__, _is_dev
 from qai_hub_apps.commands.fetch import run_fetch
 from qai_hub_apps.commands.list_apps import run_info, run_list
 from qai_hub_apps.configs.model_asset import ModelAsset
 from qai_hub_apps.errors import QAIHubAppsError, RegistryNotFoundError
 from qai_hub_apps.registry import Registry
+from qai_hub_apps.registry.remote import ensure_registry
 
 
 def main() -> None:
@@ -38,7 +39,9 @@ def main() -> None:
             "--registry",
             type=Path,
             default=None,
-            help="Path to registry.yaml (defaults to bundled registry)",
+            help="Path to registry.yaml (defaults to bundled registry)"
+            if _is_dev()
+            else argparse.SUPPRESS,
         )
 
     def add_app_id_arg(p: argparse.ArgumentParser) -> None:
@@ -60,10 +63,12 @@ def main() -> None:
     add_registry_arg(fetch_parser)
     add_app_id_arg(fetch_parser)
     fetch_parser.add_argument(
-        "--dest",
+        "-o",
+        "--output-dir",
+        dest="output_dir",
         type=Path,
         default=Path.cwd(),
-        help="Destination directory (default: current directory)",
+        help="Output directory (default: current directory)",
     )
     fetch_parser.add_argument(
         "--model",
@@ -82,16 +87,22 @@ def main() -> None:
 
     args = parser.parse_args()
 
+    if args.command == "fetch" and args.chipset and not args.model:
+        fetch_parser.error("--chipset requires --model")
+
     registry = getattr(args, "registry", None)
-    registry_path = registry or Path(__file__).parent / "registry.yaml"
 
     if args.command not in ("list", "info", "fetch"):
         parser.print_help()
         return
 
     try:
-        if not registry_path.exists():
-            raise RegistryNotFoundError(registry_path)
+        if registry is not None:
+            registry_path = registry
+            if not registry_path.exists():
+                raise RegistryNotFoundError(registry_path)
+        else:
+            registry_path = ensure_registry(__version__)
 
         registry = Registry.load(registry_path)
 
@@ -105,7 +116,7 @@ def main() -> None:
                 if args.model is not None
                 else None
             )
-            run_fetch(args.app_id, args.dest, registry, model_asset)
+            run_fetch(args.app_id, args.output_dir, registry, model_asset)
     except QAIHubAppsError as e:
         print(str(e))
         sys.exit(1)

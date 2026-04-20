@@ -8,10 +8,10 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
-from conftest import make_app_info
 
 from qai_hub_apps.configs.app_yaml import AppLanguage, AppUrl
 from qai_hub_apps.configs.model_asset import ModelAsset
+from qai_hub_apps.conftest import make_app_info
 from qai_hub_apps.errors import (
     AppIncompatibleError,
     AppNotFoundError,
@@ -314,11 +314,6 @@ def test_detail_fields_skips_empty_domain():
     app = App(make_app_info(domain=""))
     fields = dict(app.detail_fields())
     assert "Domain" not in fields
-
-
-def test_registry_load_bundled():
-    registry = Registry.load_bundled()
-    assert registry is not None
 
 
 def test_registry_apps_returns_all(sample_registry_yaml):

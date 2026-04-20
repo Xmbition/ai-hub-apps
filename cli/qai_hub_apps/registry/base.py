@@ -58,7 +58,9 @@ class App:
         has_url = self.url is not None
         with tempfile.TemporaryDirectory() as _tmp:
             tmp = Path(_tmp)
+            staged = tmp / self.id
 
+            source_download_url = None
             if not has_url and _is_dev():
                 # Dev install + no URL: bundle from source on-the-fly
                 if _bundle_app is None:
@@ -69,18 +71,15 @@ class App:
                 print(f"Dev install: bundling '{self.id}' from source...")
                 # bundle_app with make_zip=False writes to tmp/<app_id>/ == staged
                 _bundle_app(self.id, tmp, make_zip=False)
-                staged = tmp / self.id
             elif not has_url:
                 raise QAIHubAppsError(
                     "No source URL found in registry. "
                     "The registry may be outdated. Please upgrade: pip install -U qai-hub-apps"
                 )
             else:
-                # URL present (dev or prod): download from registry URL
-                source = self.url.source
-                print(f"Fetching from: {source}")
-                staged = download(source, tmp / self.id, extract=True)
+                source_download_url = self.url.source
 
+            model_download_url = None
             if model_asset is not None:
                 if model_asset.model_id not in self.related_models:
                     available = ", ".join(self.related_models) or "none"
@@ -93,9 +92,8 @@ class App:
                         f"No model_file_path configured for app '{self.id}'."
                     )
 
-                models_dir = staged / self.model_file_path
                 try:
-                    download_url = get_asset_url(
+                    model_download_url = get_asset_url(
                         model_asset.model_id,
                         runtime=self.runtime,
                         precision=self.precisions[0],
@@ -106,7 +104,14 @@ class App:
                     raise ModelAssetNotFoundError(
                         model_asset.model_id, model_asset.chipset
                     ) from e
-                download(download_url, models_dir, extract=True)
+
+            if source_download_url:
+                print(f"Fetching from: {source_download_url}")
+                staged = download(source_download_url, staged, extract=True)
+
+            if model_download_url:
+                models_dir = staged / self.model_file_path
+                download(model_download_url, models_dir, extract=True)
 
             shutil.move(staged, app_dest)
 
@@ -157,10 +162,6 @@ class Registry:
         if cls._instance is None:
             cls._instance = cls(AppRegistry.from_yaml(Path(path)))
         return cls._instance
-
-    @classmethod
-    def load_bundled(cls) -> Registry:
-        return cls.load(Path(__file__).parent.parent / "registry.yaml")
 
     @property
     def apps(self) -> ValuesView[App]:

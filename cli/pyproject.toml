@@ -18,6 +18,7 @@ dynamic = ["version"]
 dependencies = [
     "qai-hub-models-cli",
     "packaging>=24.2",
+    "platformdirs>=3.0",
     "pydantic>=2.0",
     "pyyaml",
 ]
@@ -32,6 +33,9 @@ GitHub = "https://github.com/qualcomm/ai-hub-apps"
 [tool.setuptools.packages.find]
 include = ["qai_hub_apps*"]
 
+[tool.setuptools.exclude-package-data]
+"qai_hub_apps" = ["registry.yaml"]
+
 [tool.setuptools_scm]
 root = ".."
 version_file = "qai_hub_apps/_version.py"
@@ -43,9 +47,6 @@ test = ["pytest", "pytest-mock", "pytest-cov"]
 python_files = ["*_test.py"]
 testpaths = ["qai_hub_apps"]
 addopts = "--cov=qai_hub_apps --cov-report=term-missing --cov-fail-under=100 -m 'not integration'"
-markers = [
-    "integration: end-to-end tests that exercise the full CLI stack (run with -m integration)",
-]
 
 [tool.coverage.report]
 omit = ["*_test.py", "*conftest.py"]

@@ -6,7 +6,7 @@ runtime: precompiled_qnn_onnx
 status: published
 domain: 'Audio'
 headline: 'Bring speech-to-text on device for Windows'
-description: 'A sample CLI app demonstrating how to run Whisper, a state-of-the-art speech-to-text solution, using the ONNX execution provider. Designed for learning, it showcases efficient on-device processing optimized for the Snapdragon® Neural Processing Unit (NPU).'
+description: "Demonstrates on-device speech-to-text inference with OpenAI's Whisper model via the ONNX Runtime execution provider, leveraging the Snapdragon® Neural Processing Unit (NPU) for efficient, low-latency transcription"
 precisions: [float]
 app_type: 'windows'
 static_img_filename: 'app_screen.png'

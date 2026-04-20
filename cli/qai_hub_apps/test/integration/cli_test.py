@@ -46,7 +46,7 @@ def test_fetch_output(
         [
             "fetch",
             "whisper_windows_py",
-            "--dest",
+            "--output-dir",
             str(tmp_path),
             "--registry",
             str(two_app_registry),
@@ -54,7 +54,7 @@ def test_fetch_output(
         monkeypatch,
     )
 
-    out = capsys.readouterr().out.replace(str(tmp_path), "<dest>")
+    out = capsys.readouterr().out.replace(tmp_path.as_posix(), "<dest>")
     snapshot("fetch.txt", out)
 
     extracted = tmp_path / "whisper_windows_py"
@@ -81,7 +81,7 @@ def test_fetch_dev_output(monkeypatch, two_app_registry, tmp_path, capsys, snaps
         [
             "fetch",
             "stable_diffusion_py",
-            "--dest",
+            "--output-dir",
             str(tmp_path),
             "--registry",
             str(two_app_registry),
@@ -89,7 +89,7 @@ def test_fetch_dev_output(monkeypatch, two_app_registry, tmp_path, capsys, snaps
         monkeypatch,
     )
 
-    out = capsys.readouterr().out.replace(str(tmp_path), "<dest>")
+    out = capsys.readouterr().out.replace(tmp_path.as_posix(), "<dest>")
     snapshot("fetch_dev.txt", out)
 
     extracted = tmp_path / "stable_diffusion_py"

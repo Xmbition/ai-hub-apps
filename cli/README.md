@@ -37,10 +37,6 @@ stable_diffusion_py                     Stable Diffusion
 ...
 ```
 
-| Flag | Description |
-|------|-------------|
-| `--registry PATH` | Use a custom registry.yaml (defaults to bundled registry) |
-
 ### info
 
 Show details for an app.
@@ -68,10 +64,6 @@ Run Whisper on-device using ONNX.
 Repo:  https://github.com/qualcomm/ai-hub-apps/tree/main/apps/whisper_windows_py
 ```
 
-| Flag | Description |
-|------|-------------|
-| `--registry PATH` | Use a custom registry.yaml (defaults to bundled registry) |
-
 ### fetch
 
 Download and extract an app's source to a local directory.
@@ -86,10 +78,9 @@ qai-hub-apps fetch <app_id> --model <model_id> --chipset <chipset>
 
 | Flag | Description |
 |------|-------------|
-| `--dest PATH` | Destination directory (default: current directory) |
+| `--output-dir PATH` | Output directory (default: current directory) |
 | `--model MODEL_ID` | Also download a model supported by the app |
 | `--chipset CHIPSET` | Target chipset for the model download |
-| `--registry PATH` | Use a custom registry.yaml (defaults to bundled registry) |
 
 **Example — fetch app with model:**
 
