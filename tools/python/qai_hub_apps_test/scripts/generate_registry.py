@@ -7,9 +7,12 @@ from __future__ import annotations
 import sys
 import tempfile
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING
 
 from tap import Tap
+
+if TYPE_CHECKING:
+    from mypy_boto3_s3.service_resource import Bucket
 
 from qai_hub_apps_test.bundlers import bundle_app
 from qai_hub_apps_test.configs.asset_bases_yaml import AssetBases
@@ -41,7 +44,7 @@ class GenerateRegistryParser(Tap):
     ref: str = "main"  # Git ref (branch or tag) used to construct GitHub URLs
 
     cli_version: str = _read_cli_version()  # CLI version used for S3 path
-    upload: bool = False  # Upload zips to S3; without this, list apps without bundling
+    build_and_upload: bool = False  # Build app zips and upload to S3; without this, list apps without bundling
 
 
 def _resolve_repo_url(info: QAIHAAppInfo, repo_base: str, ref: str) -> str:
@@ -55,8 +58,21 @@ def _resolve_repo_url(info: QAIHAAppInfo, repo_base: str, ref: str) -> str:
     return f"{repo_base}/tree/{ref}/apps/{info.app_repo_relative_path}"
 
 
+def upload_registry(
+    registry_path: Path, bucket: Bucket, s3_prefix: str, cli_version: str
+) -> None:
+    """Upload registry.yaml to S3."""
+    s3_key = f"{s3_prefix}/{cli_version}/registry.yaml"
+
+    def _upload(key: str = s3_key, path: Path = registry_path) -> None:
+        bucket.upload_file(str(path), key, ExtraArgs={"ACL": "public-read"})
+
+    attempt_with_s3_credentials_warning(_upload)
+    print(f"Uploaded to s3://{QAIHM_PUBLIC_S3_BUCKET}/{s3_key}")
+
+
 def upload_app(
-    zip_path: Path, app_id: str, bucket: Any, s3_prefix: str, cli_version: str
+    zip_path: Path, app_id: str, bucket: Bucket, s3_prefix: str, cli_version: str
 ) -> None:
     """Upload an app zip to S3."""
     s3_key = f"{s3_prefix}/{cli_version}/{app_id}/source.zip"
@@ -94,11 +110,11 @@ def main() -> None:
     if dupes:
         raise SystemExit(f"Error: duplicate app IDs found: {sorted(dupes)}")
 
-    s3_prefix = "qai-hub-apps/apps"
+    s3_prefix = "qai-hub-apps/releases"
     S3_REGION = "us-west-2"
     s3_base = f"https://{QAIHM_PUBLIC_S3_BUCKET}.s3.{S3_REGION}.amazonaws.com"
 
-    if args.upload:
+    if args.build_and_upload:
         if "dev" in args.cli_version:
             print(
                 f"\nWarning: version '{args.cli_version}' looks like a development build.\n"
@@ -111,7 +127,7 @@ def main() -> None:
 
     bundled_apps: list[QAIHAAppInfo] = []
 
-    if args.upload:
+    if args.build_and_upload:
         with tempfile.TemporaryDirectory() as build_dir:
             build_path = Path(build_dir)
             for info, app_dir in public_apps:
@@ -146,15 +162,27 @@ def main() -> None:
     registry = AppRegistry(
         schema_version=args.schema_version,
         min_cli_version=args.min_cli_version,
-        version=args.cli_version if args.upload else None,
+        version=args.cli_version if args.build_and_upload else None,
         apps=bundled_apps,
     )
     registry.to_yaml(args.output_dir / "registry.yaml", write_if_empty=True)
-    action = "Uploaded" if args.upload else "Registered"
+
+    if args.build_and_upload:
+        upload_registry(
+            args.output_dir / "registry.yaml",
+            bucket,
+            s3_prefix,
+            args.cli_version,
+        )
+
+    action = "Uploaded" if args.build_and_upload else "Registered"
     print(
         f"\n{'  Summary  ':=^60}"
         f"\n{action} {len(bundled_apps)} app(s) out of {len(public_apps)} public app(s) "
         f"to {args.output_dir / 'registry.yaml'}"
+        f"\nRegistry uploaded to: {s3_base}/{s3_prefix}/{args.cli_version}/registry.yaml"
+        if args.build_and_upload
+        else ""
     )
 
 

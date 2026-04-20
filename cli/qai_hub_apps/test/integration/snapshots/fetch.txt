@@ -1,0 +1,3 @@
+Downloading whisper_windows_py vdev...
+Fetching from: https://example.com/whisper_windows_py.zip
+Extracted to <dest>/whisper_windows_py

@@ -4,15 +4,22 @@
 # ---------------------------------------------------------------------
 from __future__ import annotations
 
+import shutil
+import tempfile
 from collections.abc import ValuesView
 from pathlib import Path
 from typing import Any
 
 from qai_hub_models_cli.fetch import get_asset_url
-from qai_hub_models_cli.utils import download
+from qai_hub_models_cli.utils import download, get_next_free_path
 from qai_hub_models_cli.versions import CURRENT_VERSION as QAIHM_VERSION
 
 from qai_hub_apps import _is_dev
+
+try:
+    from qai_hub_apps_test.bundlers import bundle_app as _bundle_app
+except ImportError:  # pragma: no cover
+    _bundle_app = None
 from qai_hub_apps.configs.app_yaml import AppInfo, AppLanguage
 from qai_hub_apps.configs.model_asset import ModelAsset
 from qai_hub_apps.configs.registry_yaml import AppRegistry
@@ -43,56 +50,65 @@ class App:
         """Download and extract app source. Returns the extraction path."""
         app_dest = dest / self.id
 
+        if app_dest.exists():
+            new_dest = get_next_free_path(app_dest)
+            print(f"Warning: {app_dest} already exists, saving to {new_dest} instead.")
+            app_dest = new_dest
+
         has_url = self.url is not None
-        if not has_url and _is_dev():
-            # Dev install + no URL: bundle from source on-the-fly
-            try:
-                from qai_hub_apps_test.bundlers import bundle_app as _bundle_app
-            except ImportError:
+        with tempfile.TemporaryDirectory() as _tmp:
+            tmp = Path(_tmp)
+
+            if not has_url and _is_dev():
+                # Dev install + no URL: bundle from source on-the-fly
+                if _bundle_app is None:
+                    raise QAIHubAppsError(
+                        "Dev install detected but qai_hub_apps_test is not installed. "
+                        "Install it with: pip install -e tools/python/"
+                    )
+                print(f"Dev install: bundling '{self.id}' from source...")
+                # bundle_app with make_zip=False writes to tmp/<app_id>/ == staged
+                _bundle_app(self.id, tmp, make_zip=False)
+                staged = tmp / self.id
+            elif not has_url:
                 raise QAIHubAppsError(
-                    "Dev install detected but qai_hub_apps_test is not installed. "
-                    "Install it with: pip install -e tools/python/"
-                ) from None
-            print(f"Dev install: bundling '{self.id}' from source...")
-            _bundle_app(self.id, dest, make_zip=False)
-            # bundle_app with make_zip=False writes to dest/<app_id>/ == app_dest
-        elif not has_url and not _is_dev():
-            raise QAIHubAppsError(
-                "No source URL found in registry. "
-                "The registry may be outdated. Please upgrade: pip install -U qai-hub-apps"
-            )
-        else:
-            # URL present (dev or prod): download from registry URL
-            source = self.url.source
-            print(f"Fetching from: {source}")
-            app_dest = download(source, app_dest, extract=True)
-
-        if model_asset is not None:
-            if model_asset.model_id not in self.related_models:
-                available = ", ".join(self.related_models) or "none"
-                raise AppIncompatibleError(
-                    f"Model '{model_asset.model_id}' is not supported for this app. Supported models: {available}"
+                    "No source URL found in registry. "
+                    "The registry may be outdated. Please upgrade: pip install -U qai-hub-apps"
                 )
+            else:
+                # URL present (dev or prod): download from registry URL
+                source = self.url.source
+                print(f"Fetching from: {source}")
+                staged = download(source, tmp / self.id, extract=True)
 
-            if not self.model_file_path:
-                raise AppIncompatibleError(
-                    f"No model_file_path configured for app '{self.id}'."
-                )
+            if model_asset is not None:
+                if model_asset.model_id not in self.related_models:
+                    available = ", ".join(self.related_models) or "none"
+                    raise AppIncompatibleError(
+                        f"Model '{model_asset.model_id}' is not supported for this app. Supported models: {available}"
+                    )
 
-            models_dir = app_dest / self.model_file_path
-            try:
-                download_url = get_asset_url(
-                    model_asset.model_id,
-                    runtime=self.runtime,
-                    precision=self.precisions[0],
-                    version=QAIHM_VERSION,
-                    chipset=model_asset.chipset,
-                )
-            except FileNotFoundError as e:
-                raise ModelAssetNotFoundError(
-                    model_asset.model_id, model_asset.chipset
-                ) from e
-            download(download_url, models_dir, extract=True)
+                if not self.model_file_path:
+                    raise AppIncompatibleError(
+                        f"No model_file_path configured for app '{self.id}'."
+                    )
+
+                models_dir = staged / self.model_file_path
+                try:
+                    download_url = get_asset_url(
+                        model_asset.model_id,
+                        runtime=self.runtime,
+                        precision=self.precisions[0],
+                        version=QAIHM_VERSION,
+                        chipset=model_asset.chipset,
+                    )
+                except FileNotFoundError as e:
+                    raise ModelAssetNotFoundError(
+                        model_asset.model_id, model_asset.chipset
+                    ) from e
+                download(download_url, models_dir, extract=True)
+
+            shutil.move(staged, app_dest)
 
         return app_dest
 
@@ -144,7 +160,7 @@ class Registry:
 
     @classmethod
     def load_bundled(cls) -> Registry:
-        return cls.load(Path(__file__).parent.parent / "configs" / "registry.yaml")
+        return cls.load(Path(__file__).parent.parent / "registry.yaml")
 
     @property
     def apps(self) -> ValuesView[App]:

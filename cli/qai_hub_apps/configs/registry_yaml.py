@@ -33,7 +33,7 @@ class AppRegistry(BaseConfig):
         if self.version is None:
             msg = (
                 "Registry has no version (dev registry). "
-                "Use generate_registry --upload to produce a versioned registry."
+                "Use generate_registry --build_and_upload to produce a versioned registry."
             )
             if _is_dev():
                 warnings.warn(msg, stacklevel=2)

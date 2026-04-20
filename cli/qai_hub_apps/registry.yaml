@@ -14,7 +14,7 @@ apps:
   related_models:
   - mediapipe_hand_gesture
   precisions:
-  - float
+  - w8a8
   model_file_path: models
 - name: Stable Diffusion Windows
   id: stable_diffusion_windows_py
@@ -30,7 +30,7 @@ apps:
   - stable_diffusion_v2_1
   precisions:
   - w8a16
-  model_file_path: models
+  model_file_path: model
 - name: Whisper Windows
   id: whisper_windows_py
   status: published
@@ -40,7 +40,7 @@ apps:
   use_case: Speech Recognition
   app_repo_url: https://github.com/qualcomm/ai-hub-apps/tree/main/apps/whisper_windows_py
   app_type: windows
-  runtime: onnx
+  runtime: precompiled_qnn_onnx
   related_models:
   - whisper_base
   precisions:

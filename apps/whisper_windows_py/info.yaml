@@ -2,7 +2,7 @@ name: Whisper Windows
 id: whisper_windows_py
 license_url: https://github.com/qualcomm/ai-hub-apps/blob/main/LICENSE
 license_type: bsd-3-clause
-runtime: onnx
+runtime: precompiled_qnn_onnx
 status: published
 domain: 'Audio'
 headline: 'Bring speech-to-text on device for Windows'
