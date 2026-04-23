@@ -84,23 +84,49 @@ def upload_app(
     print(f"Uploaded to s3://{QAIHM_PUBLIC_S3_BUCKET}/{s3_key}")
 
 
-def main() -> None:
-    args = GenerateRegistryParser().parse_args()
-    args.output_dir.mkdir(parents=True, exist_ok=True)
+def generate_registry(
+    output_dir: Path,
+    all_apps: list[tuple[QAIHAAppInfo, Path]],
+    repo_base: str,
+    ref: str,
+    cli_version: str,
+    schema_version: str = "1.0",
+    min_cli_version: str = "0.0.1",
+    build_and_upload: bool = False,
+) -> None:
+    """Generate registry.yaml from a list of (info, app_dir) pairs.
 
-    repo_base = AssetBases.load().app_repo_base
-    print(f"Using ref '{args.ref}' for GitHub URLs (repo base: {repo_base})")
+    Parameters
+    ----------
+    output_dir:
+        Directory where registry.yaml will be written.
+    all_apps:
+        Every (QAIHAAppInfo, app_dir) pair in the repo, unfiltered.
+    repo_base:
+        GitHub repo base URL (no ref), e.g. https://github.com/qualcomm/ai-hub-apps
+    ref:
+        Git ref (branch or tag) used to construct GitHub source URLs.
+    cli_version:
+        CLI version string embedded in the registry and used as the S3 path component.
+    schema_version:
+        Schema version to embed in the registry.
+    min_cli_version:
+        Minimum CLI version required to consume this registry.
+    build_and_upload:
+        If True, bundle Python apps and upload zips + registry to S3.
+    """
+    print(f"Using ref '{ref}' for GitHub URLs (repo base: {repo_base})")
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     public_apps: list[tuple[QAIHAAppInfo, Path]] = []
-    for rel_path in get_all_apps():
-        info, app_dir = QAIHAAppInfo.from_app(rel_path)
+    for info, app_dir in all_apps:
         if info.id != app_dir.name:
             raise SystemExit(
                 f"Error: app ID '{info.id}' in {app_dir / 'info.yaml'} "
                 f"does not match directory name '{app_dir.name}'."
             )
         if info.status == AppStatus.PUBLISHED:
-            resolved_url = _resolve_repo_url(info, repo_base, args.ref)
+            resolved_url = _resolve_repo_url(info, repo_base, ref)
             public_apps.append(
                 (info.model_copy(update={"app_repo_url": resolved_url}), app_dir)
             )
@@ -114,10 +140,10 @@ def main() -> None:
     S3_REGION = "us-west-2"
     s3_base = f"https://{QAIHM_PUBLIC_S3_BUCKET}.s3.{S3_REGION}.amazonaws.com"
 
-    if args.build_and_upload:
-        if "dev" in args.cli_version:
+    if build_and_upload:
+        if "dev" in cli_version:
             print(
-                f"\nWarning: version '{args.cli_version}' looks like a development build.\n"
+                f"\nWarning: version '{cli_version}' looks like a development build.\n"
                 f"Uploading dev versions to S3 is not recommended."
             )
             answer = input("Continue? [y/N]: ").strip().lower()
@@ -127,7 +153,7 @@ def main() -> None:
 
     bundled_apps: list[QAIHAAppInfo] = []
 
-    if args.build_and_upload:
+    if build_and_upload:
         with tempfile.TemporaryDirectory() as build_dir:
             build_path = Path(build_dir)
             for info, app_dir in public_apps:
@@ -140,10 +166,8 @@ def main() -> None:
                     continue
                 bundle_app(app_dir, build_path, make_zip=True)
                 zip_path = build_path / f"{app_dir.name}.zip"
-                upload_app(zip_path, info.id, bucket, s3_prefix, args.cli_version)
-                source_url = (
-                    f"{s3_base}/{s3_prefix}/{args.cli_version}/{info.id}/source.zip"
-                )
+                upload_app(zip_path, info.id, bucket, s3_prefix, cli_version)
+                source_url = f"{s3_base}/{s3_prefix}/{cli_version}/{info.id}/source.zip"
                 bundled_apps.append(
                     info.model_copy(update={"url": AppUrl(source=source_url)})
                 )
@@ -160,29 +184,45 @@ def main() -> None:
             print("Registered (no bundle)")
 
     registry = AppRegistry(
-        schema_version=args.schema_version,
-        min_cli_version=args.min_cli_version,
-        version=args.cli_version if args.build_and_upload else None,
+        schema_version=schema_version,
+        min_cli_version=min_cli_version,
+        version=cli_version if build_and_upload else None,
         apps=bundled_apps,
     )
-    registry.to_yaml(args.output_dir / "registry.yaml", write_if_empty=True)
+    registry.to_yaml(output_dir / "registry.yaml", write_if_empty=True)
 
-    if args.build_and_upload:
+    if build_and_upload:
         upload_registry(
-            args.output_dir / "registry.yaml",
+            output_dir / "registry.yaml",
             bucket,
             s3_prefix,
-            args.cli_version,
+            cli_version,
         )
 
-    action = "Uploaded" if args.build_and_upload else "Registered"
+    action = "Uploaded" if build_and_upload else "Registered"
     print(
         f"\n{'  Summary  ':=^60}"
         f"\n{action} {len(bundled_apps)} app(s) out of {len(public_apps)} public app(s) "
-        f"to {args.output_dir / 'registry.yaml'}"
-        f"\nRegistry uploaded to: {s3_base}/{s3_prefix}/{args.cli_version}/registry.yaml"
-        if args.build_and_upload
+        f"to {output_dir / 'registry.yaml'}"
+        f"\nRegistry uploaded to: {s3_base}/{s3_prefix}/{cli_version}/registry.yaml"
+        if build_and_upload
         else ""
+    )
+
+
+def main() -> None:
+    args = GenerateRegistryParser().parse_args()
+    repo_base = AssetBases.load().app_repo_base
+    all_apps = [QAIHAAppInfo.from_app(rel_path) for rel_path in get_all_apps()]
+    generate_registry(
+        args.output_dir,
+        all_apps,
+        repo_base,
+        args.ref,
+        args.cli_version,
+        args.schema_version,
+        args.min_cli_version,
+        args.build_and_upload,
     )
 
 

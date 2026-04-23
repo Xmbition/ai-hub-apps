@@ -44,7 +44,7 @@ jobs:
     - name: Run CLI Tests
       run: |
         cd cli && ${{ steps.setup_python.outputs.python-path }} -m pytest \
-          -vv \
+          -vv -ra -s \
           --tb=short \
           --strict-markers \
           --color=yes
@@ -58,3 +58,35 @@ jobs:
           --color=yes \
           --no-cov \
           -m integration
+
+  ##
+  ## Bundler unit tests
+  ##
+  bundler_unit_tests:
+    name: "Bundler Unit Tests"
+    if: ${{ inputs.do_all || inputs.do_precommit }}
+    runs-on: [tetra-ubuntu-2204, self-hosted]
+    env:
+      VENV_PATH: qaiha-dev
+    steps:
+    - uses: actions/checkout@v6
+    - id: setup_python
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install Deps
+      env:
+        SUDO_PASSWORD: ${{ secrets.TETRASERVICE_PASSWORD }}
+      run: |
+        bash tools/setup_env.sh --python="${{ steps.setup_python.outputs.python-path }}" --venv="${{ env.VENV_PATH }}"
+
+    - name: Run Bundler Unit Tests
+      run: |
+        source ${{ env.VENV_PATH }}/bin/activate
+        cd tools/python && pytest \
+          -vv -ra -s \
+          --tb=short \
+          --strict-markers \
+          --color=yes \
+          -m bundler_unit
