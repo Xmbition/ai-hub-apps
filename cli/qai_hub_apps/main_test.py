@@ -42,7 +42,7 @@ def test_fetch_command_calls_run_fetch(monkeypatch, tmp_path, sample_registry_ya
         [
             "fetch",
             "test_app",
-            "--dest",
+            "--output-dir",
             str(tmp_path),
             "--registry",
             str(sample_registry_yaml),
@@ -70,7 +70,7 @@ def test_fetch_command_with_model_creates_model_asset(
             "whisper_base",
             "--chipset",
             "snapdragon_8_gen_3",
-            "--dest",
+            "--output-dir",
             str(tmp_path),
             "--registry",
             str(sample_registry_yaml),
@@ -92,7 +92,7 @@ def test_fetch_without_model_passes_none(monkeypatch, tmp_path, sample_registry_
         [
             "fetch",
             "test_app",
-            "--dest",
+            "--output-dir",
             str(tmp_path),
             "--registry",
             str(sample_registry_yaml),
@@ -102,6 +102,24 @@ def test_fetch_without_model_passes_none(monkeypatch, tmp_path, sample_registry_
     # run_fetch is called positionally: (app_id, dest, registry, model_asset)
     model_asset = mock_run_fetch.call_args[0][3]
     assert model_asset is None
+
+
+def test_chipset_without_model_exits(monkeypatch, tmp_path, sample_registry_yaml):
+    with pytest.raises(SystemExit) as exc:
+        _run_main(
+            [
+                "fetch",
+                "test_app",
+                "--chipset",
+                "snapdragon_8_gen_3",
+                "--output-dir",
+                str(tmp_path),
+                "--registry",
+                str(sample_registry_yaml),
+            ],
+            monkeypatch,
+        )
+    assert exc.value.code == 2
 
 
 def test_missing_registry_exits_1(monkeypatch, tmp_path):
@@ -143,3 +161,14 @@ def test_no_command_does_not_crash(monkeypatch, capsys):
     _run_main([], monkeypatch)
     out = capsys.readouterr().out
     assert "usage" in out.lower() or "qai-hub-apps" in out
+
+
+def test_default_registry_calls_ensure_registry(monkeypatch, sample_registry_yaml):
+    mock_ensure = MagicMock(return_value=sample_registry_yaml)
+    monkeypatch.setattr("qai_hub_apps.main.ensure_registry", mock_ensure)
+    mock_run_list = MagicMock()
+    monkeypatch.setattr("qai_hub_apps.main.run_list", mock_run_list)
+
+    _run_main(["list"], monkeypatch)
+
+    mock_ensure.assert_called_once()

@@ -72,7 +72,7 @@ __NOTE: Some of these apps will run without NPU acceleration on non-Snapdragon®
 
 | Task | Language | Inference API | Special Tags |
 | -- | -- | -- | -- |
-| [Hand Gesture Recognition](apps/mediapipe_hand_gesture_ubuntu) | Python | TensorFlow Lite | GStreamer |
+| [Hand Gesture Recognition](apps/mediapipe_hand_gesture_ubuntu_py) | Python | TensorFlow Lite | GStreamer |
 
 ## _Tutorials_ Directory
 

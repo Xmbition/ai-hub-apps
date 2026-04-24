@@ -2,13 +2,13 @@ schema_version: '1.0'
 min_cli_version: 0.0.1
 apps:
 - name: MediaPipe Hand Gesture Recognition
-  id: mediapipe_hand_gesture_ubuntu
+  id: mediapipe_hand_gesture_ubuntu_py
   status: published
   headline: On-device hand gesture recognition with TFLite
   description: A sample app for Ubuntu integrating the MediaPipe Hand Gesture recognition model via TFLite Runtime. It leverages GStreamer for input video and provides a minimal web interface to stream output frames suitable for embedded applications.
   domain: Computer Vision
   use_case: Object Detection
-  app_repo_url: https://github.com/qualcomm/ai-hub-apps/tree/main/apps/mediapipe_hand_gesture_ubuntu
+  app_repo_url: https://github.com/qualcomm/ai-hub-apps/tree/main/apps/mediapipe_hand_gesture_ubuntu_py
   app_type: ubuntu
   runtime: tflite
   related_models:
@@ -35,7 +35,7 @@ apps:
   id: whisper_windows_py
   status: published
   headline: Bring speech-to-text on device for Windows
-  description: A sample CLI app demonstrating how to run Whisper, a state-of-the-art speech-to-text solution, using the ONNX execution provider. Designed for learning, it showcases efficient on-device processing optimized for the Snapdragon® Neural Processing Unit (NPU).
+  description: Demonstrates on-device speech-to-text inference with OpenAI's Whisper model via the ONNX Runtime execution provider, leveraging the Snapdragon® Neural Processing Unit (NPU) for efficient, low-latency transcription
   domain: Audio
   use_case: Speech Recognition
   app_repo_url: https://github.com/qualcomm/ai-hub-apps/tree/main/apps/whisper_windows_py

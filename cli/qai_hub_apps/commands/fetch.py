@@ -14,13 +14,12 @@ from qai_hub_apps.registry import Registry
 
 def run_fetch(
     app_id: str,
-    dest: Path,
+    output_dir: Path,
     registry: Registry,
     model_asset: ModelAsset | None = None,
 ) -> None:
-    print(f"Downloading {app_id} v{registry.version}...")
     try:
-        app_dest = registry.fetch_app(app_id, dest, model_asset=model_asset)
+        app_dest = registry.fetch_app(app_id, output_dir, model_asset=model_asset)
     except (urllib.error.HTTPError, urllib.error.URLError) as e:
         msg = (
             f"Download failed (HTTP {e.code})"
@@ -28,4 +27,4 @@ def run_fetch(
             else f"Download failed: {e.reason}"
         )
         raise QAIHubAppsError(msg) from e
-    print(f"Extracted to {app_dest}")
+    print(f"Extracted to {app_dest.as_posix()}")

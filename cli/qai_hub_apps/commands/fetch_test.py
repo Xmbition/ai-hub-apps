@@ -28,7 +28,7 @@ def test_run_fetch_success(capsys):
     registry.fetch_app.assert_called_once_with(
         "test_app", Path("/tmp"), model_asset=None
     )
-    assert str(dest) in capsys.readouterr().out
+    assert dest.as_posix() in capsys.readouterr().out
 
 
 def test_run_fetch_with_model_asset(capsys):

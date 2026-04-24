@@ -36,6 +36,10 @@ check-style-mismatch = true
 ignore_missing_imports = true
 warn_unused_ignores = true
 
+[tool.pytest.ini_options]
+python_files = ["*_test.py"]
+testpaths = ["qai_hub_apps_test"]
+
 [[tool.mypy.overrides]]
 module = "qai_hub_apps_test.*"
 disable_error_code = ["type-abstract", "override", "method-assign"]

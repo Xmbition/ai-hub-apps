@@ -38,8 +38,8 @@ jobs:
     steps:
       - run: echo "Release approved"
 
-  release_pypi:
-      name: Release to ${{ inputs.target == 'prod' && 'PyPI' || 'test PyPI' }}
+  release_apps_and_wheel:
+      name: Release Apps and Push to ${{ inputs.target == 'prod' && 'PyPI' || 'test PyPI' }}
       needs: [approve]
       if: ${{ !cancelled() && (needs.approve.result == 'success' || needs.approve.result == 'skipped') }}
       runs-on: [tetra-ubuntu-2204, self-hosted]
@@ -77,7 +77,7 @@ jobs:
         run: |
             bash tools/setup_env.sh --python="${{ steps.setup_python.outputs.python-path }}" --venv="${{ env.VENV_PATH }}"
 
-      - name: Generate registry.yaml
+      - name: Build and upload app bundles to S3, generate registry.yaml
         run: |
           source ${{ env.VENV_PATH }}/bin/activate
           python -m qai_hub_apps_test.scripts.generate_registry --output_dir cli/qai_hub_apps/ --build_and_upload --ref ${{ github.ref_name }}

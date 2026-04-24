@@ -7,9 +7,9 @@ from __future__ import annotations
 from unittest.mock import MagicMock
 
 import pytest
-from conftest import make_app_info
 
 from qai_hub_apps.commands.list_apps import run_info, run_list
+from qai_hub_apps.conftest import make_app_info
 from qai_hub_apps.errors import AppNotFoundError
 from qai_hub_apps.registry.base import App
 

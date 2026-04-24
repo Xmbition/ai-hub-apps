@@ -8,10 +8,10 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
-from conftest import make_app_info
 
 from qai_hub_apps.configs.app_yaml import AppLanguage, AppUrl
 from qai_hub_apps.configs.model_asset import ModelAsset
+from qai_hub_apps.conftest import make_app_info
 from qai_hub_apps.errors import (
     AppIncompatibleError,
     AppNotFoundError,
@@ -40,8 +40,16 @@ def test_make_app_returns_base_app_for_empty_languages():
     assert type(app) is App
 
 
-def test_registry_version_returns_dev_when_none(sample_registry_yaml):
-    registry = Registry.load(sample_registry_yaml)
+def test_registry_version_returns_dev_when_none(tmp_path, monkeypatch):
+    monkeypatch.setattr("qai_hub_apps.configs.registry_yaml._is_dev", lambda: True)
+    content = """\
+schema_version: '1.0'
+min_cli_version: 0.0.1
+apps: []
+"""
+    p = tmp_path / "registry.yaml"
+    p.write_text(content)
+    registry = Registry.load(p)
     assert registry.version == "dev"
 
 
@@ -314,11 +322,6 @@ def test_detail_fields_skips_empty_domain():
     app = App(make_app_info(domain=""))
     fields = dict(app.detail_fields())
     assert "Domain" not in fields
-
-
-def test_registry_load_bundled():
-    registry = Registry.load_bundled()
-    assert registry is not None
 
 
 def test_registry_apps_returns_all(sample_registry_yaml):

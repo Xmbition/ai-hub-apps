@@ -7,10 +7,10 @@ from __future__ import annotations
 import warnings
 
 import pytest
-from conftest import make_app_info
 from pydantic import ValidationError
 
 from qai_hub_apps.configs.registry_yaml import AppRegistry
+from qai_hub_apps.conftest import make_app_info
 
 
 def _make_registry(**overrides) -> AppRegistry:

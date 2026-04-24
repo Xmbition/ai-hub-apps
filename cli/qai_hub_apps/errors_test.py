@@ -11,6 +11,7 @@ from qai_hub_apps.errors import (
     AppNotFoundError,
     ModelAssetNotFoundError,
     QAIHubAppsError,
+    RegistryFetchError,
     RegistryNotFoundError,
 )
 
@@ -61,10 +62,18 @@ def test_model_asset_stores_none_chipset():
     assert err.chipset is None
 
 
+def test_registry_fetch_error_message():
+    err = RegistryFetchError("https://example.com/registry.yaml")
+    msg = str(err)
+    assert "https://example.com/registry.yaml" in msg
+    assert "internet connection" in msg
+
+
 def test_all_errors_are_qai_hub_apps_error():
     for cls in [
         AppNotFoundError,
         AppIncompatibleError,
+        RegistryFetchError,
         RegistryNotFoundError,
         ModelAssetNotFoundError,
     ]:

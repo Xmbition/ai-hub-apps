@@ -25,7 +25,17 @@ class AppIncompatibleError(QAIHubAppsError):
 
 class RegistryNotFoundError(QAIHubAppsError):
     def __init__(self, path: Path | str) -> None:
-        super().__init__(f"Registry not found: {path}\nTip: pass --registry PATH")
+        super().__init__(
+            f"Registry not found: {Path(path).as_posix()}\nTip: pass --registry PATH"
+        )
+
+
+class RegistryFetchError(QAIHubAppsError):
+    def __init__(self, url: str) -> None:
+        super().__init__(
+            f"Failed to fetch registry from {url}\n"
+            "Check your internet connection or try reinstalling: pip install -U qai-hub-apps"
+        )
 
 
 class ModelAssetNotFoundError(QAIHubAppsError):

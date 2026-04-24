@@ -4,9 +4,8 @@
 # ---------------------------------------------------------------------
 from __future__ import annotations
 
-from conftest import make_app_info
-
 from qai_hub_apps.configs.app_yaml import AppType
+from qai_hub_apps.conftest import make_app_info
 from qai_hub_apps.registry.base import App
 from qai_hub_apps.validate import is_app_supported
 from qai_hub_apps.validate.platform_check import check_platform
