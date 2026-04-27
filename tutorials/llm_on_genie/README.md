@@ -3,30 +3,29 @@
 In this tutorial, we will run large language models (LLMs) on-device on
 Snapdragon® platforms such as:
 
-- Android: Snapdragon® 8 Elite, Snapdragon® 8 Gen 3 (e.g. Samsung Galaxy Series)
-- Windows: Snapdragon® X Elite (e.g. Snapdragon® based Microsoft Surface Pro)
+- Android: Snapdragon® 8 Elite Gen 5, Snapdragon® 8 Elite (e.g. Samsung Galaxy Series)
+- Windows: Snapdragon® X2 Elite, Snapdragon® X Elite (e.g. Snapdragon® based Microsoft Surface Pro)
 - Linux: Dragonwing® Platforms (e.g. Dragonwing® QCM8550, Dragonwing® IQ-9075)
 
-We use the [Llama 3.2 3B
-Instruct](https://aihub.qualcomm.com/automotive/models/llama_v3_2_3b_instruct)
-model as the running example. In case of any questions, please feel free to post
-them on the [Qualcomm AI Hub Slack
-channel](https://aihub.qualcomm.com/community/slack).
+We use [Qwen3-4B](https://aihub.qualcomm.com/models/qwen3_4b) as the running
+example. In case of any questions, please feel free to post them on the
+[Qualcomm AI Hub Slack channel](https://aihub.qualcomm.com/community/slack).
 
 ## Overview
 
 There are three steps to run
-[Llama 3.2 3B Instruct](https://aihub.qualcomm.com/models/llama_v3_2_3b_instruct):
+[Qwen3-4B](https://aihub.qualcomm.com/models/qwen3_4b):
 
 - **Step 1:** Install the [QAIRT SDK](https://softwarecenter.qualcomm.com/catalog/item/Qualcomm_AI_Runtime_Community) on the target device.
-- **Step 2:** Prepare models compatible with the QAIRT SDK on the host machine.
-  - Get access to [Llama 3 weights from Hugging Face](https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct).
-  - Use [Qualcomm AI Hub Models](https://github.com/qualcomm/ai-hub-models/tree/main/src/qai_hub_models/models) to export Llama 3 using [Qualcomm AI Hub](https://aihub.qualcomm.com/).
+- **Step 2:** Prepare a Genie bundle for the target device. You have two options:
+  - **Option A:** Download ready-made assets from [Qualcomm AI Hub
+    Models](https://aihub.qualcomm.com/models) (available for some models,
+    including Qwen3-4B).
+  - **Option B:** Export the model yourself with
+    [qai-hub-models](https://github.com/qualcomm/ai-hub-models/tree/main/src/qai_hub_models/models)
+    (required for models with restricted weights such as Llama). See
+    [export.md](export.md) for the full export walkthrough.
 - **Step 3:** Run the LLM on the target device with an example prompt.
-
-> [!IMPORTANT]
-> Some models are available directly from [Qualcomm AI Hub
-> Models](https://aihub.qualcomm.com/models). For those models, Step 2 is optional.
 
 ## Requirements
 
@@ -44,7 +43,7 @@ Software requirements:
 - [qai-hub-models](https://pypi.org/project/qai-hub-models/)
 
 > [!IMPORTANT]
-> Each [model card](https://aihub.qualcomm.com/models/llama_v3_2_3b_instruct)
+> Each [model card](https://aihub.qualcomm.com/models/qwen3_4b)
 > specifically lists compatible devices and minimum QAIRT SDK versions.
 > Ensure device and software requirements are met before proceeding.
 
@@ -79,7 +78,8 @@ export QAIRT_HOME= ## Location of downloaded QAIRT SDK on target device
 export PATH=${QAIRT_HOME}/bin/aarch64-android/:${PATH}
 export LD_LIBRARY_PATH=${QAIRT_HOME}/lib/aarch64-android:${LD_LIBRARY_PATH}
 
-# This device uses v73
+# Please make sure the architecture matches that of the device
+# (v73 for 8 Elite, v81 for 8 Elite Gen 5)
 export ADSP_LIBRARY_PATH=${QAIRT_HOME}/lib/hexagon-v73/unsigned
 ```
 
@@ -93,7 +93,8 @@ $env:QAIRT_HOME = ## Location of downloaded QAIRT SDK
 $env:Path = "$env:QAIRT_HOME\bin\aarch64-windows-msvc;" + $env:Path
 $env:Path = "$env:QAIRT_HOME\lib\aarch64-windows-msvc;" + $env:Path
 
-# Please make sure the architecture matches that of the device (v73, v75)
+# Please make sure the architecture matches that of the device
+# (v73 for X Elite, v81 for X2 Elite)
 $env:ADSP_LIBRARY_PATH = "$env:QAIRT_HOME\lib\hexagon-v73\unsigned"
 ```
 
@@ -108,7 +109,7 @@ export QAIRT_HOME= ## Location of downloaded QAIRT SDK on target device
 export PATH=${QAIRT_HOME}/bin/aarch64-oe-linux-gcc11.2:${PATH}
 export LD_LIBRARY_PATH=${QAIRT_HOME}/lib/aarch64-oe-linux-gcc11.2:${LD_LIBRARY_PATH}
 
-# Please make sure the architecture matches that of the device (v73, v75)
+# Please make sure the architecture matches that of the device (e.g. v73, v75, v81)
 export ADSP_LIBRARY_PATH=${QAIRT_HOME}/lib/hexagon-v73/unsigned
 ```
 
@@ -126,8 +127,8 @@ Android/Linux and `$PROFILE` on Windows PowerShell.
 export AUTO_QAIRT_HOME= ## Location of downloaded Auto QAIRT SDK on target device
 export PATH=${AUTO_QAIRT_HOME}/bin/aarch64-android/:${PATH}
 
-# Please make sure the architecture matches that of the device (v73, v75); replace vXX with appropriate architecture
-export VENDOR_LIB=${AUTO_QAIRT_HOME}/lib/hexagon-vXX/unsigned
+# Please make sure the architecture matches that of the device (e.g. v73, v75, v81)
+export VENDOR_LIB=${AUTO_QAIRT_HOME}/lib/hexagon-v75/unsigned
 
 export ADSP_LIBRARY_PATH="/vendor/lib/rfsa/adsp;$VENDOR_LIB;"
 export LD_LIBRARY_PATH=${AUTO_QAIRT_HOME}/lib/aarch64-android:/vendor/lib64/
@@ -145,90 +146,45 @@ For auto devices, once the SDK is installed, users need to copy additional libra
 > cp /data/local/tmp/qxa.qa_adsplib/libc++.so.1 $VENDOR_LIB
 > cp /data/local/tmp/qxa.qa_adsplib/libc++abi.so.1 $VENDOR_LIB
 
-## Step 2: Export QAIRT-compatible LLM models (on the host machine)
+## Step 2: Prepare a Genie bundle (on the host machine)
 
-Export QAIRT-compatible models using the export scripts in
-[qai-hub-models](https://github.com/qualcomm/ai-hub-models/tree/main/src/qai_hub_models/)
-on the host machine (Linux, Windows, or macOS).
+You have two options for producing the `genie_bundle` folder that will be
+deployed to the device.
 
-> [!NOTE]
-> Some models are available directly from
-> [Qualcomm AI Hub Models](https://aihub.qualcomm.com/models). For those models,
-> download and copy them to the device.
+### Option A: Download ready-made assets
 
-### Install Qualcomm AI Hub Models (on the host machine)
+Some models have pre-compiled assets available for download, including our
+running example, [Qwen3-4B](https://aihub.qualcomm.com/models/qwen3_4b). The AI
+Hub model card does not currently expose a direct download button. Instead,
+follow the Hugging Face link from the model card: the Hugging Face README
+contains a table with download links to the assets for each supported device.
+For Qwen3-4B specifically, that page is
+[huggingface.co/qualcomm/Qwen3-4B](https://huggingface.co/qualcomm/Qwen3-4B).
 
-Use [qai-hub-models](https://github.com/qualcomm/ai-hub-models/tree/main/src/qai_hub_models/)
-to adapt Hugging Face Llama models for on-device inference. Most models have
-open access and are downloaded automatically by the package.
+Pick the row matching your target device, unzip the download, and use the
+resulting folder as `genie_bundle`. Make sure the QAIRT SDK version installed
+on the device matches the one listed alongside the assets.
 
-If you have not set up a Python environment, follow
-[Setting up a Python environment with Qualcomm AI Hub Models](#setting-up-a-python-environment-with-qualcomm-ai-hub-models).
+If the downloaded assets do not include a tokenizer or Genie configuration
+file, see [Prepare Genie bundle manually](manual_bundle.md).
 
-### Set up Hugging Face tokens (models with restricted access)
+### Option B: Export the model yourself
 
-Set up a Hugging Face token on the host by following the
-[Hugging Face CLI guide](https://huggingface.co/docs/huggingface_hub/en/guides/cli).
+Some models (notably the Llama family, which requires gated Hugging Face
+access) are not distributed as pre-compiled assets and must be exported from
+source with
+[qai-hub-models](https://github.com/qualcomm/ai-hub-models/tree/main/src/qai_hub_models/).
 
-```bash
-pip install -U "huggingface_hub[cli]"
-hf auth login
-```
-
-> [!IMPORTANT]
-> A Hugging Face token is required only for the Llama model family. Request
-> [access to Llama 3.2-3B-Instruct](https://huggingface.co/meta-llama/Llama-3.2-3B-Instruct).
-
-### Export models using Qualcomm AI Hub
-
-Generate assets for Llama 3.2 3B using the export script below. It downloads
-model weights from Hugging Face, compiles for your target device, and prepares a
-bundle for deployment. First, install AI Hub Models with the right dependencies
-for Llama 3.2 3B:
-
-```
-pip install "qai-hub-models[llama-v3-2-3b-instruct]"
-```
-
-For other models, please confirm the exact command in the model's README file
-(linked from the model cards at [Qualcomm AI Hub
-Models](https://aihub.qualcomm.com/models)).
-
-> [!IMPORTANT]
-> The export command may take 2–3 hours and requires significant memory (RAM +
-> swap) on the host. If you are prompted that your memory is insufficient,
-> please see [Increase Swap space](increase_swap.md).
-
-```bash
-# Snapdragon 8 Elite
-python -m qai_hub_models.models.llama_v3_2_3b_instruct.export --chipset qualcomm-snapdragon-8-elite --skip-profiling --output-dir genie_bundle
-
-# Snapdragon 8 Gen 3
-python -m qai_hub_models.models.llama_v3_2_3b_instruct.export --chipset qualcomm-snapdragon-8gen3 --skip-profiling --output-dir genie_bundle
-
-# Snapdragon X Elite
-python -m qai_hub_models.models.llama_v3_2_3b_instruct.export --chipset qualcomm-snapdragon-x-elite --skip-profiling --output-dir genie_bundle
-```
-
-> [!NOTE]
-> On memory-constrained target devices, reduce the context length with
-> `--context-length <context-length>`.
-
-The export script places context binaries, tokenizer, and Genie configuration
-files into the `genie_bundle` folder. If you plan to run directly via
-`genie-t2t-run`, follow the instructions printed at the end of the export.
-
-For some older models, the tokenizer and Genie configuration is not
-automatically created by the export script. In such case, see [Prepare Genie
-bundle manually](manual_bundle.md).
+See [export.md](export.md) for the full export walkthrough.
 
 ## Step 3: Run the LLM on-device
 
-You have three options to run the LLM on device:
+You have four options to run the LLM on device:
 
 - Option 1: Use the `genie-t2t-run` CLI command
-- Option 2: Use the [CLI Windows ChatApp](https://github.com/qualcomm/ai-hub-apps/tree/main/apps/chatapp_windows_cpp)
-- Option 3: Use the [Android ChatApp](https://github.com/qualcomm/ai-hub-apps/tree/main/apps/chatapp_android)
+- Option 2: Use the `genie-app` CLI command with a model-provided script (if available)
+- Option 3: Use the [CLI Windows ChatApp](https://github.com/qualcomm/ai-hub-apps/tree/main/apps/chatapp_windows_cpp)
+- Option 4: Use the [Android ChatApp](https://github.com/qualcomm/ai-hub-apps/tree/main/apps/chatapp_android)
 
 ### *Option 1*: Run Genie via `genie-t2t-run`
 
@@ -253,11 +209,11 @@ See the section on [prompt formats for various models](#prompt-formats).
 In PowerShell, this can be run using the following command
 
 ```bash
-genie-t2t-run.exe -c genie_config.json -p "<|begin_of_text|><|start_header_id|>user<|end_header_id|>`n`nWhat is France's capital?<|eot_id|><|start_header_id|>assistant<|end_header_id|>"
+genie-t2t-run.exe -c genie_config.json -p "<|im_start|>system`nYou are a helpful AI assistant.<|im_end|>`n<|im_start|>user`nWhat is France's capital?<|im_end|>`n<|im_start|>assistant`n"
 ```
 
 > [!IMPORTANT]
-> This prompt format is specific to Llama 3. Use `` `n `` (instead of `\n`) to
+> This prompt format is specific to Qwen3. Use `` `n `` (instead of `\n`) to
 > pass a real line feed in Windows PowerShell.
 
 For non‑Latin languages (e.g., Chinese, Arabic), first [configure Windows to use UTF‑8](windows/utf8.md).
@@ -275,19 +231,19 @@ adb shell
 Once copied to the device, run the following:
 
 ```bash
-genie-t2t-run -c genie_config.json -p "<|begin_of_text|><|start_header_id|>user<|end_header_id|>"$'\n\n'$"What is France's capital?<|eot_id|><|start_header_id|>assistant<|end_header_id|>"
+genie-t2t-run -c genie_config.json -p "<|im_start|>system"$'\n'$"You are a helpful AI assistant.<|im_end|>"$'\n'$"<|im_start|>user"$'\n'$"What is France's capital?<|im_end|>"$'\n'$"<|im_start|>assistant"$'\n'
 ```
 
 > [!IMPORTANT]
-> To pass real line feeds into Genie in Bash, use `$'\n\n'$` instead of
-> `"\n\n"`. We generally recommend using a prompt file with real newlines.
+> To pass real line feeds into Genie in Bash, use `$'\n'$` instead of `"\n"`.
+> We generally recommend using a prompt file with real newlines.
 
 #### Linux (Ubuntu)
 
 This can be run using the following command:
 
 ```bash
-genie-t2t-run -c genie_config.json -p "<|begin_of_text|><|start_header_id|>user<|end_header_id|>"$'\n\n'$"What is France's capital?<|eot_id|><|start_header_id|>assistant<|end_header_id|>"
+genie-t2t-run -c genie_config.json -p "<|im_start|>system"$'\n'$"You are a helpful AI assistant.<|im_end|>"$'\n'$"<|im_start|>user"$'\n'$"What is France's capital?<|im_end|>"$'\n'$"<|im_start|>assistant"$'\n'
 ```
 
 #### Sample output
@@ -298,22 +254,49 @@ Using libGenie.so version 1.1.0
 [WARN]  "Unable to initialize logging in backend extensions."
 [INFO]  "Using create From Binary List Async"
 [INFO]  "Allocated total size = 323453440 across 10 buffers"
-[PROMPT]: <|begin_of_text|><|start_header_id|>user<|end_header_id|>\n\nWhat is France's capital?<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+[PROMPT]: <|im_start|>system\nYou are a helpful AI assistant.<|im_end|>\n<|im_start|>user\nWhat is France's capital?<|im_end|>\n<|im_start|>assistant\n
 
-[BEGIN]: \n\nFrance's capital is Paris.[END]
+[BEGIN]: <think>
+Okay, the user is asking about the capital of France. I need to provide an accurate answer. First, I should recall what I know about French capital. The capital of France is Paris. But wait, I should make sure I'm not making a mistake. Sometimes, people might confuse the capital with another city, but no, Paris is definitely the capital. Let me double-check. Yes, Paris is the capital city of France. So the answer is Paris. I should present this clearly and confirm that there's no confusion with other cities like Lyon or Marseille, but no, Paris is the correct answer. I need to make sure the answer is correct and not confused with other cities. Also, maybe mention that it's the capital, and maybe add a bit about its significance, but the main point is to state that the capital is Paris.
+</think>
+
+The capital of France is **Paris**. It is the political, economic, and cultural center of the country and is widely recognized as the capital. Paris is known for its rich history, iconic landmarks like the Eiffel Tower and Louvre Museum, and its role as a global hub for art, fashion, and gastronomy.[END]
 ```
+
+> [!NOTE]
+> Qwen3-4B has thinking mode enabled by default and will emit a
+> `<think>…</think>` block before its final answer.
+
+> [!NOTE]
+> Qwen3-4B has thinking mode enabled by default and will emit a
+> `<think>…</think>` block before its final answer. To disable thinking
+> mode, append to your prompt `<think>\n\n</think>\n`.
 
 Performance KPIs (token rate, time-to-first-token, etc.) can be obtained by
 passing `--profile path_to_txt_file.txt` to `genie-t2t-run`.
 
-### Option 2: Sample C++ Chat App Powered by Genie SDK
+### Option 2: Run Genie via `genie-app` with a model-provided script
+
+If the model's Genie bundle ships with a `genie-app-script.txt` file, you can
+run the bundle end-to-end using the `genie-app` executable from the QAIRT SDK:
+
+```bash
+genie-app -s genie-app-script.txt
+```
+
+The script encodes the correct prompt format and turn structure, so you do not
+need to assemble the prompt yourself. For vision-language models (VLMs), the
+script also exercises image input, making this the recommended quick check
+that the model pipeline (text + image) is working on device.
+
+### Option 3: Sample C++ Chat App Powered by Genie SDK
 
 We provide a sample C++ app to show how to build an application using the Genie
 SDK. See the [CLI Windows
 ChatApp](https://github.com/qualcomm/ai-hub-apps/tree/main/apps/chatapp_windows_cpp)
 for more details.
 
-### Option 3: Sample Android Chat App Powered by Genie SDK
+### Option 4: Sample Android Chat App Powered by Genie SDK
 
 We provide a sample Android app (Java and C++) to show how to build an
 application using the Genie SDK for mobile. See [Android
@@ -371,7 +354,8 @@ found on the Hugging Face repository for each model. A few examples are below.
 | Llama3-TAIDE-LX-8B-Chat-Alpha1                                                                           | <&#124;begin_of_text&#124;><&#124;start_header_id&#124;>system<&#124;end_header_id&#124;>\n\n 你是一個來自台灣的 AI 助理，你的名字是 TAIDE，樂於以台灣人的立場幫助使用者，會用繁體中文回答問題<&#124;eot_id&#124;>\n<&#124;start_header_id&#124;>user<&#124;end_header_id&#124;>\n\n 介紹台灣特色<&#124;eot_id&#124;>\n<&#124;start_header_id&#124;>assistant<&#124;end_header_id&#124;> |
 | Llama-SEA-LION-v3.5-8B-R (non-thinking mode)                                                             | <&#124;begin_of_text&#124;><&#124;start_header_id&#124;>system<&#124;end_header_id&#124;>\n\ndetailed thinking off<&#124;eot_id&#124;><&#124;start_header_id&#124;>user<&#124;end_header_id&#124;>\n\nThủ đô của Việt Nam là thành phố nào?<&#124;eot_id&#124;><&#124;start_header_id&#124;>assistant<&#124;end_header_id&#124;>\n\n&lt;think&gt;\n\n&lt;/think&gt;>\n\n                 |
 | Llama-SEA-LION-v3.5-8B-R (thinking mode)                                                                 | <&#124;begin_of_text&#124;><&#124;start_header_id&#124;>system<&#124;end_header_id&#124;>\n\ndetailed thinking on<&#124;eot_id&#124;><&#124;start_header_id&#124;>user<&#124;end_header_id&#124;>\n\nThủ đô của Việt Nam là thành phố nào?<&#124;eot_id&#124;><&#124;start_header_id&#124;>assistant<&#124;end_header_id&#124;>\n\n&lt;think&gt;\nHere is my thinking:\n                 |
-| Qwen2-7B-Instruct <br> Qwen2.5-7B-Instruct                                                               | <&#124;im_start&#124;>system\nYou are a helpful AI Assistant<&#124;im_end&#124;><&#124;im_start&#124;>What is France's capital?\n<&#124;im_end&#124;>\n<&#124;im_start&#124;>assistant\n                                                                                                                                                                                                 |
+| Qwen2-7B-Instruct <br> Qwen2.5-7B-Instruct <br> Qwen2.5-VL-7B-Instruct                                   | <&#124;im_start&#124;>system\nYou are a helpful AI Assistant.<&#124;im_end&#124;><&#124;im_start&#124;>What is France's capital?\n<&#124;im_end&#124;>\n<&#124;im_start&#124;>assistant\n                                                                                                                                                                                                 |
+| Qwen3-4B                                                                                                 | <&#124;im_start&#124;>system\nYou are a helpful AI assistant.<&#124;im_end&#124;>\n<&#124;im_start&#124;>user\nWhat is France's capital?<&#124;im_end&#124;>\n<&#124;im_start&#124;>assistant\n                                                                                                                                                                                           |
 | Phi-3.5-Mini-Instruct                                                                                    | <&#124;system&#124;>\nYou are a helpful assistant. Be helpful but brief.<&#124;end&#124;>\n<&#124;user&#124;>What is France's capital?\n<&#124;end&#124;>\n<&#124;assistant&#124;>\n                                                                                                                                                                                                     |
 | Mistral-7B-Instruct-v0.3                                                                                 | &lt;s&gt;[INST] You are a helpful assistant\n\nTranslate 'Good morning, how are you?' into French.[/INST]                                                                                                                                                                                                                                                                                |
 | IBM-Granite-v3.1-8B-Instruct                                                                             | <&#124;start_of_role&#124;>system<&#124;end_of_role&#124;>You are a helpful AI assistant.<&#124;end_of_text&#124;>\n <&#124;start_of_role&#124;>user<&#124;end_of_role&#124;>What is France's capital?<&#124;end_of_text&#124;>\n <&#124;start_of_role&#124;>assistant<&#124;end_of_role&#124;>\n                                                                                        |
