@@ -58,6 +58,7 @@ jobs:
       models_branch_name: main
       create_pr: false
       import_models: true
+      import_mode: no-verify
 
   notify_failure:
     if: ${{ failure() && (github.event_name == 'schedule' || inputs.notify_failure) }}

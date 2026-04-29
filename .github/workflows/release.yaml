@@ -53,3 +53,4 @@ jobs:
       dst_branch_name: ${{ format('dev/qaihm_bot-QCOM/qaiha_release/{0}', github.ref_name) }}
       create_pr: true
       import_models: false
+      import_mode: no-verify
