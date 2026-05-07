@@ -9,8 +9,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source ../../_shared/scripts/python_utils.sh
 source ../../_shared/scripts/apt_utils.sh
 source ../../_shared/scripts/pip_utils.sh
+source ../../_shared/scripts/qairt_utils.sh
 
 install_python
+install_qairt
 
 install_apt_pkgs \
     libgstreamer1.0-dev \
