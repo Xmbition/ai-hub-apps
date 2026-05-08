@@ -25,6 +25,13 @@ source "$_PYTHON_UTILS_DIR/apt_utils.sh"
 
 install_python() {
     local ver="${PYTHON_VERSION}"
+
+    echo "::step::Adding deadsnakes PPA for python${ver}"
+    install_apt_pkg software-properties-common
+    $SUDO add-apt-repository -y ppa:deadsnakes/ppa
+    $SUDO apt-get update -q
+    echo "::done::deadsnakes PPA"
+
     install_apt_pkg "python${ver}"
     install_apt_pkg "python${ver}-venv"
     install_apt_pkg "python${ver}-dev"

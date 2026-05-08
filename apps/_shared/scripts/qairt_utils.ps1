@@ -20,6 +20,11 @@ $QAIRT_PATH = "C:\Qualcomm\AIStack\QAIRT\$QAIRT_SDK_FULL_VERSION"
 function Install-Qairt {
     param([switch]$Force)
 
+    if ($env:QAIRT_INSTALL_SKIP -eq "true") {
+        Write-Host "::skip::QAIRT SDK install deferred (QAIRT_INSTALL_SKIP=true)"
+        return
+    }
+
     if ((Test-Path $QAIRT_PATH) -and -not $Force) {
         Write-Host "::skip::QAIRT SDK already installed at $QAIRT_PATH"
         return

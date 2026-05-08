@@ -22,6 +22,11 @@ source "$_QAIRT_UTILS_DIR/apt_utils.sh"
 QAIRT_PATH="/opt/qcom/aistack/qairt/${QAIRT_SDK_FULL_VERSION}"
 
 install_qairt() {
+    if [ "${QAIRT_INSTALL_SKIP:-}" = "true" ]; then
+        echo "::skip::QAIRT SDK install deferred (QAIRT_INSTALL_SKIP=true)"
+        return 0
+    fi
+
     local force=0
     if [ "${1:-}" = "--force" ]; then force=1; fi
 

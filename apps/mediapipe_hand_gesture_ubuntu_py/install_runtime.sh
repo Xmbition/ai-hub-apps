@@ -14,15 +14,22 @@ source ../../_shared/scripts/qairt_utils.sh
 install_python
 install_qairt
 
+$SUDO apt-add-repository -y ppa:ubuntu-qcom-iot/qcom-ppa
+$SUDO apt-get update -q
+
 install_apt_pkgs \
-    libgstreamer1.0-dev \
+    libcairo2-dev \
+    pkg-config \
+    libgirepository1.0-dev \
+    gir1.2-gstreamer-1.0 \
+    gstreamer1.0-tools \
     gstreamer1.0-plugins-base \
     gstreamer1.0-plugins-good \
-    gstreamer1.0-plugins-bad \
-    gstreamer1.0-tools \
-    libcairo2-dev \
-    python3-gi \
-    python3-gi-cairo
-install_apt_pkg gir1.2-gstreamer-1.0
+    gstreamer1.0-plugins-qcom-qmmfsrc \
+    gstreamer1.0-plugins-qcom-vtransform \
+    v4l2loopback-dkms \
+    v4l2loopback-utils
+
+install_apt_pkg unzip
 
 install_pip_deps -r "$SCRIPT_DIR/requirements.txt"
