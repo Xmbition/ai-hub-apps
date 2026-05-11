@@ -36,7 +36,11 @@ WORKDIR /app
 
 COPY . /app
 
-RUN if [ -f install_runtime.sh ]; then QAIRT_INSTALL_SKIP=true bash install_runtime.sh; fi
+RUN if [ "$INSTALL_QUALCOMM_CA" = "true" ]; then \
+        export SSL_CERT_FILE=/usr/local/share/ca-certificates/qualcomm.com/nscacert.crt; \
+        export REQUESTS_CA_BUNDLE=/usr/local/share/ca-certificates/qualcomm.com/nscacert.crt; \
+    fi \
+    && if [ -f install_runtime.sh ]; then QAIRT_INSTALL_SKIP=true bash install_runtime.sh; fi
 
 ENTRYPOINT ["bash", "-c", "source /app/scripts/qairt_utils.sh && install_qairt && exec \"$@\"", "--"]
 CMD ["bash"]

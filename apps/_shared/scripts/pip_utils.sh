@@ -8,7 +8,7 @@
 # Functions:
 #   install_pip_deps [--venv <dir>] <pkg_or_req> [<pkg_or_req> ...] [-- <extra_uv_args>]
 #       Create a .venv (if needed) and install packages or requirements files via uv.
-#       --venv <dir>  : venv directory (default: $SCRIPT_DIR/.venv)
+#       --venv <dir>  : venv directory (default: $PWD/.venv)
 #       <pkg_or_req>  : package spec (e.g. numpy==1.24) or -r requirements.txt
 #       -- <args>     : extra flags passed directly to uv pip install
 #
@@ -19,7 +19,7 @@ _PIP_UTILS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$_PIP_UTILS_DIR/load_versions.sh"
 
 install_pip_deps() {
-    local venv_dir="${SCRIPT_DIR:-.}/.venv"
+    local venv_dir="${PWD}/.venv"
     local -a install_args=()
     local -a extra_args=()
     local after_sep=0

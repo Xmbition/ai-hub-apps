@@ -15,7 +15,8 @@
 $_QairtUtilsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 . "$_QairtUtilsDir\load_versions.ps1"
 
-$QAIRT_PATH = "C:\Qualcomm\AIStack\QAIRT\$QAIRT_SDK_FULL_VERSION"
+$QAIRT_ROOT = "C:\Qualcomm\AIStack\QAIRT"
+$QAIRT_PATH = "$QAIRT_ROOT\$QAIRT_SDK_FULL_VERSION"
 
 function Install-Qairt {
     param([switch]$Force)
@@ -25,7 +26,7 @@ function Install-Qairt {
         return
     }
 
-    if ((Test-Path $QAIRT_PATH) -and -not $Force) {
+    if ((Test-Path $QAIRT_PATH) -and (Get-ChildItem $QAIRT_PATH -Force | Select-Object -First 1) -and -not $Force) {
         Write-Host "::skip::QAIRT SDK already installed at $QAIRT_PATH"
         return
     }
@@ -45,7 +46,8 @@ function Install-Qairt {
     Remove-Item $tmpZip
 
     $extracted = Join-Path $tmpDir "qairt\$QAIRT_SDK_FULL_VERSION"
-    New-Item -ItemType Directory -Path (Split-Path -Parent $QAIRT_PATH) -Force | Out-Null
+    New-Item -ItemType Directory -Path $QAIRT_ROOT -Force | Out-Null
+    if (Test-Path $QAIRT_PATH) { Remove-Item -Recurse -Force $QAIRT_PATH }
     Move-Item $extracted $QAIRT_PATH
     Remove-Item -Recurse -Force $tmpDir
     Write-Host "::done::QAIRT SDK installed at $QAIRT_PATH"

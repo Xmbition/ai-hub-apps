@@ -7,7 +7,7 @@
 # Functions:
 #   Install-PipDeps [-VenvDir <path>] [-Packages <string[]>] [-ExtraArgs <string[]>]
 #       Create a .venv (if needed) and install packages or requirements files via uv.
-#       -VenvDir <path>       : venv directory (default: $PSScriptRoot\.venv)
+#       -VenvDir <path>       : venv directory (default: $PWD\.venv)
 #       -Packages <string[]>  : package specs or -r requirements.txt entries
 #       -ExtraArgs <string[]> : extra flags passed directly to uv pip install
 #
@@ -23,7 +23,7 @@ function Install-PipDeps {
         [string[]]$ExtraArgs = @()
     )
     if ($VenvDir -eq "") {
-        $VenvDir = Join-Path $PSScriptRoot ".venv"
+        $VenvDir = Join-Path $PWD ".venv"
     }
     $ver = $PYTHON_VERSION
     $majorMinor = ($ver -split "\.")[ 0..1] -join "."

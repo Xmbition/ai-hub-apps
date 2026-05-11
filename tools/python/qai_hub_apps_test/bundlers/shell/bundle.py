@@ -159,7 +159,7 @@ def find_transitive_scripts(direct_ref: Path, shared_scripts_root: Path) -> set[
 
 
 def bundle_scripts(out_dir: Path, shared_scripts_root: Path | None = None) -> None:
-    """Process install scripts, copy shared scripts and versions.env to scripts/.
+    """Process install/test scripts, copy shared scripts and versions.env to scripts/.
 
     Operates on ``out_dir`` after the app source has already been copied there.
 
@@ -172,21 +172,26 @@ def bundle_scripts(out_dir: Path, shared_scripts_root: Path | None = None) -> No
         Auto-resolved from the repository structure if None.
     """
     shared_scripts_root = resolve_scripts_root(shared_scripts_root)
-    install_scripts = list(out_dir.glob("install_*.sh")) + list(
-        out_dir.glob("install_*.ps1")
+    app_scripts = (
+        list(out_dir.glob("install_*.sh"))
+        + list(out_dir.glob("install_*.ps1"))
+        + list(out_dir.glob("test.sh"))
+        + list(out_dir.glob("test.ps1"))
     )
-    if not install_scripts:
-        print("No install_*.sh / install_*.ps1 found; skipping shell script bundling.")
+    if not app_scripts:
+        print(
+            "No install_*.sh / install_*.ps1 / test.sh / test.ps1 found; skipping shell script bundling."
+        )
         return
 
-    print(f"Found {len(install_scripts)} install script(s) to process.")
+    print(f"Found {len(app_scripts)} script(s) to process.")
 
     scripts_dir = out_dir / "scripts"
     scripts_dir.mkdir(exist_ok=True)
 
-    # Rewrite each install script and collect direct shared refs
+    # Rewrite each script and collect direct shared refs
     all_direct_refs: set[Path] = set()
-    for script in install_scripts:
+    for script in app_scripts:
         rewritten, direct_refs = collect_and_rewrite_scripts(
             script, shared_scripts_root
         )

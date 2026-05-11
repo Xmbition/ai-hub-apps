@@ -19,7 +19,8 @@ source "$_QAIRT_UTILS_DIR/load_versions.sh"
 # shellcheck disable=SC1091
 source "$_QAIRT_UTILS_DIR/apt_utils.sh"
 
-QAIRT_PATH="/opt/qcom/aistack/qairt/${QAIRT_SDK_FULL_VERSION}"
+QAIRT_ROOT="/opt/qcom/aistack/qairt"
+QAIRT_PATH="${QAIRT_ROOT}/${QAIRT_SDK_FULL_VERSION}"
 
 install_qairt() {
     if [ "${QAIRT_INSTALL_SKIP:-}" = "true" ]; then
@@ -30,7 +31,7 @@ install_qairt() {
     local force=0
     if [ "${1:-}" = "--force" ]; then force=1; fi
 
-    if [ -d "$QAIRT_PATH" ] && [ "$force" -eq 0 ]; then
+    if [ -d "$QAIRT_PATH" ] && [ -n "$(ls -A "$QAIRT_PATH" 2>/dev/null)" ] && [ "$force" -eq 0 ]; then
         echo "::skip::QAIRT SDK already installed at $QAIRT_PATH"
         return 0
     fi
@@ -53,7 +54,8 @@ install_qairt() {
     unzip -q "$tmp_zip" -d "$tmp_dir"
     rm "$tmp_zip"
 
-    $SUDO mkdir -p "$(dirname "$QAIRT_PATH")"
+    $SUDO mkdir -p "$QAIRT_ROOT"
+    $SUDO rm -rf "$QAIRT_PATH"
     $SUDO mv "$tmp_dir/qairt/${QAIRT_SDK_FULL_VERSION}" "$QAIRT_PATH"
     rm -rf "$tmp_dir"
     echo "::done::QAIRT SDK installed at $QAIRT_PATH"

@@ -28,8 +28,9 @@ install_apt_pkgs \
     gstreamer1.0-plugins-qcom-qmmfsrc \
     gstreamer1.0-plugins-qcom-vtransform \
     v4l2loopback-dkms \
-    v4l2loopback-utils
+    v4l2loopback-utils \
+    gstreamer1.0-libav
 
 install_apt_pkg unzip
 
-install_pip_deps -r "$SCRIPT_DIR/requirements.txt"
+install_pip_deps --venv "$SCRIPT_DIR/.venv" -r "$SCRIPT_DIR/requirements.txt"

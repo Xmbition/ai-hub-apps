@@ -8,6 +8,7 @@ import queue
 import subprocess
 import time
 import warnings
+from pathlib import Path
 from typing import Any
 
 import cv2
@@ -390,36 +391,31 @@ def main(args: argparse.Namespace) -> None:
     appsink.set_property("emit-signals", True)
     appsink.connect("new-sample", on_new_sample)
 
-    delegate_path = "libQnnTFLiteDelegate.so"
+    delegate_path = (
+        args.qairt_root / "lib" / "aarch64-oe-linux-gcc11.2" / "libQnnTFLiteDelegate.so"
+    )
+    delegate = Delegate(
+        delegate_path,
+        {
+            "backend_type": "htp",
+            "htp_performance_mode": "2",
+            "library_path": str(
+                args.qairt_root / "lib" / "aarch64-oe-linux-gcc11.2" / "libQnnHtp.so"
+            ),
+            "skel_library_dir": str(
+                args.qairt_root / "lib" / "hexagon-v73" / "unsigned"
+            ),
+        },
+    )
 
     hand_detector = Interpreter(
-        "models/palm_detector.tflite",
-        experimental_delegates=[
-            Delegate(
-                delegate_path,
-                {
-                    "backend_type": "htp",
-                    "htp_performance_mode": "2",
-                    "log_level": "1",
-                },
-            )
-        ],
+        "models/PalmDetector.tflite", experimental_delegates=[delegate]
     )
     landmark_detector = Interpreter(
-        "models/hand_landmark_detector.tflite",
-        experimental_delegates=[
-            Delegate(
-                delegate_path,
-                {
-                    "backend_type": "htp",
-                    "htp_performance_mode": "2",
-                    "log_level": "1",
-                },
-            )
-        ],
+        "models/HandLandmarkDetector.tflite", experimental_delegates=[delegate]
     )
 
-    gesture_classifier = Interpreter("models/canned_gesture_classifier.tflite")
+    gesture_classifier = Interpreter("models/CannedGestureClassifier.tflite")
 
     hand_detector.allocate_tensors()
     landmark_detector.allocate_tensors()
@@ -517,6 +513,12 @@ if __name__ == "__main__":
         required=False,
         default=768,
         help="Video height (input), default 768",
+    )
+    parser.add_argument(
+        "--qairt-root",
+        type=Path,
+        required=True,
+        help="Path to QAIRT SDK root",
     )
 
     args = parser.parse_args()

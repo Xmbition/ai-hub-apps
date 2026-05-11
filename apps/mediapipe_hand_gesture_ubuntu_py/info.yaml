@@ -17,4 +17,5 @@ os:
   version: 24.04+
 languages: ['Python']
 use_case: 'Object Detection'
+supported_devices: ["Dragonwing IQ-9075 EVK"]
 related_models: ['mediapipe_hand_gesture']

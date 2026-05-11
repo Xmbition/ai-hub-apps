@@ -30,9 +30,13 @@ if [ "$USE_DOCKER" = "true" ]; then
         -t "$IMAGE_NAME" "$APP_DIR"
 
     echo "Running inside container ..."
-    docker run --rm \
-        -v "$APP_DIR:/app" \
-        -v "$QAIRT_PATH:$QAIRT_PATH" \
+    docker run --rm --privileged \
+        -v "$QAIRT_ROOT:$QAIRT_ROOT" \
+        -v /usr/lib/libcdsprpc.so:/usr/lib/libcdsprpc.so:ro \
+        -v /usr/lib/libcdsprpc.so.1:/usr/lib/libcdsprpc.so.1:ro \
+        -v /usr/lib/libcdsprpc.so.1.0.0:/usr/lib/libcdsprpc.so.1.0.0:ro \
+        -v /usr/lib/libdmabufheap.so.0:/usr/lib/libdmabufheap.so.0:ro \
+        -v /usr/lib/libdmabufheap.so.0.0.0:/usr/lib/libdmabufheap.so.0.0.0:ro \
         -w /app \
         "$IMAGE_NAME" \
         bash -euo pipefail -c '<<RUN_COMMAND>>'
