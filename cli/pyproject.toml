@@ -16,7 +16,7 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
-    "qai-hub-models-cli",
+    "qai-hub-models-cli==0.53.1",
     "packaging>=24.2",
     "platformdirs>=3.0",
     "pydantic>=2.0",

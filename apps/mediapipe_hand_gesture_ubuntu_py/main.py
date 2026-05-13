@@ -392,7 +392,7 @@ def main(args: argparse.Namespace) -> None:
     appsink.connect("new-sample", on_new_sample)
 
     delegate_path = (
-        args.qairt_root / "lib" / "aarch64-oe-linux-gcc11.2" / "libQnnTFLiteDelegate.so"
+        args.qairt_path / "lib" / "aarch64-oe-linux-gcc11.2" / "libQnnTFLiteDelegate.so"
     )
     delegate = Delegate(
         delegate_path,
@@ -400,22 +400,22 @@ def main(args: argparse.Namespace) -> None:
             "backend_type": "htp",
             "htp_performance_mode": "2",
             "library_path": str(
-                args.qairt_root / "lib" / "aarch64-oe-linux-gcc11.2" / "libQnnHtp.so"
+                args.qairt_path / "lib" / "aarch64-oe-linux-gcc11.2" / "libQnnHtp.so"
             ),
             "skel_library_dir": str(
-                args.qairt_root / "lib" / "hexagon-v73" / "unsigned"
+                args.qairt_path / "lib" / f"hexagon-{args.hexagon_version}" / "unsigned"
             ),
         },
     )
 
     hand_detector = Interpreter(
-        "models/PalmDetector.tflite", experimental_delegates=[delegate]
+        "models/palm_detector.tflite", experimental_delegates=[delegate]
     )
     landmark_detector = Interpreter(
-        "models/HandLandmarkDetector.tflite", experimental_delegates=[delegate]
+        "models/hand_landmark_detector.tflite", experimental_delegates=[delegate]
     )
 
-    gesture_classifier = Interpreter("models/CannedGestureClassifier.tflite")
+    gesture_classifier = Interpreter("models/canned_gesture_classifier.tflite")
 
     hand_detector.allocate_tensors()
     landmark_detector.allocate_tensors()
@@ -515,10 +515,16 @@ if __name__ == "__main__":
         help="Video height (input), default 768",
     )
     parser.add_argument(
-        "--qairt-root",
+        "--qairt-path",
         type=Path,
         required=True,
         help="Path to QAIRT SDK root",
+    )
+    parser.add_argument(
+        "--hexagon-version",
+        type=str,
+        default="v73",
+        help="Hexagon version of the device, e.g. v73, default v73",
     )
 
     args = parser.parse_args()
