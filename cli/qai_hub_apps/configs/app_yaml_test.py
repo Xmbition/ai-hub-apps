@@ -59,9 +59,9 @@ def test_app_info_optional_languages_defaults_empty():
     assert info.languages == []
 
 
-def test_app_info_optional_model_file_path_defaults_empty():
+def test_app_info_optional_model_file_paths_defaults_empty():
     info = AppInfo(**_REQUIRED_FIELDS)
-    assert info.model_file_path == ""
+    assert info.model_file_paths == []
 
 
 def test_app_info_optional_environment_defaults_none():

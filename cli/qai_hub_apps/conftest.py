@@ -61,7 +61,7 @@ def sample_registry_yaml(tmp_path: Path) -> Path:
     from qai_hub_apps import __version__
 
     content = f"""\
-schema_version: '1.0'
+schema_version: '1.1'
 min_cli_version: 0.0.1
 version: '{__version__}'
 apps:

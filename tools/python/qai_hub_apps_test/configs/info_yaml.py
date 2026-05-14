@@ -68,10 +68,21 @@ class QAIHACLIAppInfo(BaseQAIHMConfig):
     runtime: TargetRuntime
     related_models: list[str]
     precisions: list[Precision]
-    model_file_path: Path = (
-        Path()
-    )  # Path in which downloaded model files should be placed
+    model_file_paths: list[
+        Path
+    ] = []  # Destination paths for each downloaded model file
     url: AppUrl | None = None
+
+    @model_validator(mode="after")
+    def _validate_model_file_paths_same_dir(self) -> "QAIHACLIAppInfo":
+        if len(self.model_file_paths) > 1:
+            parents = {Path(p).parent for p in self.model_file_paths}
+            if len(parents) > 1:
+                raise ValueError(
+                    f"All model_file_paths must share the same parent directory, "
+                    f"got: {sorted(str(p) for p in parents)}"
+                )
+        return self
 
 
 class QAIHAAppInfo(QAIHACLIAppInfo):

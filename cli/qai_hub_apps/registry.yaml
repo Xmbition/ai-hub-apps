@@ -1,5 +1,5 @@
-schema_version: '1.0'
-min_cli_version: 0.0.1
+schema_version: '1.1'
+min_cli_version: 0.30.0
 apps:
 - name: MediaPipe Hand Gesture Recognition
   id: mediapipe_hand_gesture_ubuntu_py
@@ -15,7 +15,10 @@ apps:
   - mediapipe_hand_gesture
   precisions:
   - w8a8
-  model_file_path: models
+  model_file_paths:
+  - models/palm_detector.tflite
+  - models/hand_landmark_detector.tflite
+  - models/canned_gesture_classifier.tflite
 - name: Stable Diffusion Windows
   id: stable_diffusion_windows_py
   status: published
@@ -30,7 +33,10 @@ apps:
   - stable_diffusion_v2_1
   precisions:
   - w8a16
-  model_file_path: model
+  model_file_paths:
+  - model/text_encoder.onnx
+  - model/unet.onnx
+  - model/vae.onnx
 - name: Whisper Windows
   id: whisper_windows_py
   status: published
@@ -45,4 +51,6 @@ apps:
   - whisper_base
   precisions:
   - float
-  model_file_path: models
+  model_file_paths:
+  - models/encoder.onnx
+  - models/decoder.onnx

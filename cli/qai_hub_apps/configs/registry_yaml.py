@@ -13,12 +13,35 @@ from qai_hub_apps import __version__, _is_dev
 from qai_hub_apps.configs.app_yaml import AppInfo
 from qai_hub_apps.configs.base_config import BaseConfig
 
+# this maps a SCHEMA version to the last supported CLI version
+# key is schema version and value is a pip constraint for installation recommendation
+SCHEMA_CLI_SUPPORT_MAP: dict[str, str] = {
+    "1.0": "qai-hub-apps<0.30.0",
+}
+
+MIN_SUPPORTED_SCHEMA_VERSION = Version("1.1")
+
 
 class AppRegistry(BaseConfig):
     schema_version: str
     min_cli_version: str
     version: str | None = None
     apps: list[AppInfo]
+
+    @model_validator(mode="after")
+    def _check_schema_version(self) -> AppRegistry:
+        if Version(self.schema_version) < MIN_SUPPORTED_SCHEMA_VERSION:
+            hint = SCHEMA_CLI_SUPPORT_MAP.get(self.schema_version)
+            detail = (
+                f"Please downgrade: pip install '{hint}'"
+                if hint
+                else "No compatible CLI version is known for this registry schema."
+            )
+            raise ValueError(
+                f"Registry schema version {self.schema_version} is not supported by this CLI. "
+                f"{detail}"
+            )
+        return self
 
     @model_validator(mode="after")
     def _unique_ids(self) -> AppRegistry:

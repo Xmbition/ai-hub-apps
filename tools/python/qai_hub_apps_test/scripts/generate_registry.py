@@ -39,8 +39,8 @@ def _read_cli_version() -> str:
 
 class GenerateRegistryParser(Tap):
     output_dir: Path  # Directory where registry.yaml will be written
-    schema_version: str = "1.0"  # Schema version to embed in the registry
-    min_cli_version: str = "0.0.1"  # Minimum CLI version required to use this registry
+    schema_version: str = "1.1"  # Schema version to embed in the registry
+    min_cli_version: str = "0.30.0"  # Minimum CLI version required to use this registry
     ref: str = "main"  # Git ref (branch or tag) used to construct GitHub URLs
 
     cli_version: str = _read_cli_version()  # CLI version used for S3 path

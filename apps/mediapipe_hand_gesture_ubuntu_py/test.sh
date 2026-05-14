@@ -21,4 +21,4 @@ wget -q -O "$TEST_VIDEO" "$TEST_VIDEO_URL"
 
 python main.py \
     --video-gstreamer-source "filesrc location=$TEST_VIDEO ! decodebin" \
-    --qairt-root "$QAIRT_PATH"
+    --qairt-path "$QAIRT_PATH"
