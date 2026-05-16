@@ -38,7 +38,7 @@ def get_gstreamer_input_pipeline(
         return (
             f"{video_source} ! "
             f"video/x-raw,width={video_source_width},height={video_source_height},framerate=60/1,format=NV12 ! "
-            f"qtivtransform flip-horizontal=true ! video/x-raw,format=RGB,width={video_source_width},height={video_source_height} ! "
+            f"videoconvert ! video/x-raw,format=RGB,width={video_source_width},height={video_source_height} ! "
             "queue max-size-buffers=2 leaky=downstream ! "
             "appsink name=appsink drop=true sync=false max-buffers=1 emit-signals=true"
         )

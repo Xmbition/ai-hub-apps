@@ -30,6 +30,15 @@ on:
         required: false
         type: string
 
+      import_mode:
+        description: Import mode.
+        type: choice
+        default: default
+        options:
+          - default
+          - no-verify
+          - no-verify-urls
+
   # Used by other workflows to trigger this workflow
   workflow_call:
     inputs:
@@ -52,6 +61,10 @@ on:
       models_branch_name:
         required: false
         type: string
+
+      import_mode:
+        type: string
+        default: default
 
     outputs:
       website_pr_url:
@@ -77,6 +90,7 @@ jobs:
           NODE_VERSION: 22.x
           PYTHON_VERSION: '3.10'
           VENV_PATH: build/ci-envs/release
+          IMPORT_MODE: ${{ inputs.import_mode }}
 
         steps:
           - uses: actions/checkout@v6
@@ -133,10 +147,10 @@ jobs:
               cp .env.local.example .env.local
               sed -i -e "s/DJANGO_API_TOKEN=/DJANGO_API_TOKEN=${{ secrets.HUB_USER_TOKEN_PROD }}/g" .env.local
               bash scripts/setup.sh
-              if [[ "${{ steps.checkout_models.conclusion }}" == "skipped" ]]; then
-                bash scripts/import-zoo.sh app --no-verify-jobs
+              if [[ "${{ env.IMPORT_MODE }}" != "default" ]]; then
+                bash scripts/import-zoo.sh app --${{ env.IMPORT_MODE }}
               else
-                bash scripts/import-zoo.sh --no-verify-jobs
+                bash scripts/import-zoo.sh app
               fi
 
           - name: Commit Changes

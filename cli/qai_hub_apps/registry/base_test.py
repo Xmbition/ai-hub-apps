@@ -22,6 +22,22 @@ from qai_hub_apps.registry.base import App, Registry, _make_app
 from qai_hub_apps.registry.python_app import PythonApp
 
 
+def fake_download(url: str, path: Path, extract: bool = False) -> Path:
+    """Simulate download: for model URLs creates metadata.json + model files + an extra file."""
+    import json
+
+    path.mkdir(parents=True, exist_ok=True)
+    if "model" in url:
+        metadata: dict[str, dict[str, dict]] = {
+            "model_files": {"model1.onnx": {}, "model2.onnx": {}}
+        }
+        (path / "metadata.json").write_text(json.dumps(metadata))
+        (path / "model1.onnx").touch()
+        (path / "model2.onnx").touch()
+        (path / "LICENSE").touch()
+    return path
+
+
 def test_make_app_returns_python_app_for_python_language():
     info = make_app_info(languages=[AppLanguage.PYTHON])
     app = _make_app(info)
@@ -43,7 +59,7 @@ def test_make_app_returns_base_app_for_empty_languages():
 def test_registry_version_returns_dev_when_none(tmp_path, monkeypatch):
     monkeypatch.setattr("qai_hub_apps.configs.registry_yaml._is_dev", lambda: True)
     content = """\
-schema_version: '1.0'
+schema_version: '1.1'
 min_cli_version: 0.0.1
 apps: []
 """
@@ -56,7 +72,7 @@ apps: []
 def test_registry_version_returns_string_when_set(tmp_path, monkeypatch):
     monkeypatch.setattr("qai_hub_apps.configs.registry_yaml._is_dev", lambda: True)
     content = """\
-schema_version: '1.0'
+schema_version: '1.1'
 min_cli_version: 0.0.1
 version: '1.2.3'
 apps: []
@@ -98,16 +114,10 @@ def test_registry_load_fresh_after_reset(sample_registry_yaml):
     assert r1 is not r2
 
 
-def _fake_download(url: str, path: Path, extract: bool = False) -> Path:
-    """Test helper: simulate download by creating the destination directory."""
-    path.mkdir(parents=True, exist_ok=True)
-    return path
-
-
 def test_fetch_with_url_calls_download(monkeypatch, tmp_path):
     dest = tmp_path / "output"
     dest.mkdir()
-    monkeypatch.setattr("qai_hub_apps.registry.base.download", _fake_download)
+    monkeypatch.setattr("qai_hub_apps.registry.base.download", fake_download)
     monkeypatch.setattr("qai_hub_apps.registry.base._is_dev", lambda: False)
 
     info = make_app_info(url=AppUrl(source="https://example.com/app.zip"))
@@ -122,7 +132,7 @@ def test_fetch_with_url_dev_also_uses_download(monkeypatch, tmp_path):
     """URL present in dev mode → still downloads normally."""
     dest = tmp_path / "output"
     dest.mkdir()
-    monkeypatch.setattr("qai_hub_apps.registry.base.download", _fake_download)
+    monkeypatch.setattr("qai_hub_apps.registry.base.download", fake_download)
     monkeypatch.setattr("qai_hub_apps.registry.base._is_dev", lambda: True)
 
     info = make_app_info(url=AppUrl(source="https://example.com/app.zip"))
@@ -171,13 +181,13 @@ def test_fetch_prod_no_url_raises(monkeypatch, tmp_path):
 
 
 def test_fetch_model_not_in_related_models_raises(monkeypatch, tmp_path):
-    monkeypatch.setattr("qai_hub_apps.registry.base.download", _fake_download)
+    monkeypatch.setattr("qai_hub_apps.registry.base.download", fake_download)
     monkeypatch.setattr("qai_hub_apps.registry.base._is_dev", lambda: False)
 
     info = make_app_info(
         url=AppUrl(source="https://example.com/app.zip"),
         related_models=["valid_model"],
-        model_file_path="models",
+        model_file_paths=["models/model.onnx"],
     )
     app = App(info)
     asset = ModelAsset(model_id="wrong_model", chipset=None)
@@ -186,22 +196,22 @@ def test_fetch_model_not_in_related_models_raises(monkeypatch, tmp_path):
 
 
 def test_fetch_no_model_file_path_raises(monkeypatch, tmp_path):
-    monkeypatch.setattr("qai_hub_apps.registry.base.download", _fake_download)
+    monkeypatch.setattr("qai_hub_apps.registry.base.download", fake_download)
     monkeypatch.setattr("qai_hub_apps.registry.base._is_dev", lambda: False)
 
     info = make_app_info(
         url=AppUrl(source="https://example.com/app.zip"),
         related_models=["test_model"],
-        model_file_path="",
+        model_file_paths=[],
     )
     app = App(info)
     asset = ModelAsset(model_id="test_model", chipset=None)
-    with pytest.raises(AppIncompatibleError, match="model_file_path"):
+    with pytest.raises(AppIncompatibleError, match="model_file_paths"):
         app.fetch(tmp_path, model_asset=asset)
 
 
 def test_fetch_model_asset_not_found_raises(monkeypatch, tmp_path):
-    monkeypatch.setattr("qai_hub_apps.registry.base.download", _fake_download)
+    monkeypatch.setattr("qai_hub_apps.registry.base.download", fake_download)
     monkeypatch.setattr("qai_hub_apps.registry.base._is_dev", lambda: False)
     monkeypatch.setattr(
         "qai_hub_apps.registry.base.get_asset_url",
@@ -211,7 +221,7 @@ def test_fetch_model_asset_not_found_raises(monkeypatch, tmp_path):
     info = make_app_info(
         url=AppUrl(source="https://example.com/app.zip"),
         related_models=["test_model"],
-        model_file_path="models",
+        model_file_paths=["models/model.onnx"],
     )
     app = App(info)
     asset = ModelAsset(model_id="test_model", chipset=None)
@@ -220,7 +230,7 @@ def test_fetch_model_asset_not_found_raises(monkeypatch, tmp_path):
 
 
 def test_fetch_model_asset_success(monkeypatch, tmp_path):
-    monkeypatch.setattr("qai_hub_apps.registry.base.download", _fake_download)
+    monkeypatch.setattr("qai_hub_apps.registry.base.download", fake_download)
     monkeypatch.setattr("qai_hub_apps.registry.base._is_dev", lambda: False)
     monkeypatch.setattr(
         "qai_hub_apps.registry.base.get_asset_url",
@@ -230,19 +240,27 @@ def test_fetch_model_asset_success(monkeypatch, tmp_path):
     info = make_app_info(
         url=AppUrl(source="https://example.com/app.zip"),
         related_models=["test_model"],
-        model_file_path="models",
+        model_file_paths=["models/renamed_model1.onnx", "models/renamed_model2.onnx"],
     )
     app = App(info)
     asset = ModelAsset(model_id="test_model", chipset=None)
     result = app.fetch(tmp_path, model_asset=asset)
 
+    import json
+
     assert result == tmp_path / "test_app"
     assert result.exists()
-    assert (result / "models").exists()
+    assert (result / "models" / "renamed_model1.onnx").exists()
+    assert (result / "models" / "renamed_model2.onnx").exists()
+    assert (result / "models" / "LICENSE").exists()
+    metadata = json.loads((result / "models" / "metadata.json").read_text())
+    assert list(metadata["model_files"].keys()) == [
+        "renamed_model1.onnx",
+        "renamed_model2.onnx",
+    ]
 
 
 def test_fetch_model_failure_leaves_no_dest(monkeypatch, tmp_path):
-    monkeypatch.setattr("qai_hub_apps.registry.base.download", _fake_download)
     monkeypatch.setattr("qai_hub_apps.registry.base._is_dev", lambda: False)
     monkeypatch.setattr(
         "qai_hub_apps.registry.base.get_asset_url",
@@ -260,7 +278,7 @@ def test_fetch_model_failure_leaves_no_dest(monkeypatch, tmp_path):
     info = make_app_info(
         url=AppUrl(source="https://example.com/app.zip"),
         related_models=["test_model"],
-        model_file_path="models",
+        model_file_paths=["models/model.onnx"],
     )
     app = App(info)
     asset = ModelAsset(model_id="test_model", chipset=None)
@@ -271,7 +289,7 @@ def test_fetch_model_failure_leaves_no_dest(monkeypatch, tmp_path):
 
 
 def test_fetch_model_asset_not_found_leaves_no_dest(monkeypatch, tmp_path):
-    monkeypatch.setattr("qai_hub_apps.registry.base.download", _fake_download)
+    monkeypatch.setattr("qai_hub_apps.registry.base.download", fake_download)
     monkeypatch.setattr("qai_hub_apps.registry.base._is_dev", lambda: False)
     monkeypatch.setattr(
         "qai_hub_apps.registry.base.get_asset_url",
@@ -281,7 +299,7 @@ def test_fetch_model_asset_not_found_leaves_no_dest(monkeypatch, tmp_path):
     info = make_app_info(
         url=AppUrl(source="https://example.com/app.zip"),
         related_models=["test_model"],
-        model_file_path="models",
+        model_file_paths=["models/model.onnx"],
     )
     app = App(info)
     asset = ModelAsset(model_id="test_model", chipset=None)
@@ -291,9 +309,113 @@ def test_fetch_model_asset_not_found_leaves_no_dest(monkeypatch, tmp_path):
     assert not (tmp_path / "test_app").exists()
 
 
+def test_fetch_model_file_paths_renames_using_metadata(monkeypatch, tmp_path):
+    """Files from metadata.json are placed at model_file_paths destinations (with rename)."""
+    monkeypatch.setattr("qai_hub_apps.registry.base.download", fake_download)
+    monkeypatch.setattr("qai_hub_apps.registry.base._is_dev", lambda: False)
+    monkeypatch.setattr(
+        "qai_hub_apps.registry.base.get_asset_url",
+        MagicMock(return_value="https://example.com/model.zip"),
+    )
+
+    info = make_app_info(
+        url=AppUrl(source="https://example.com/app.zip"),
+        related_models=["test_model"],
+        model_file_paths=[
+            "models/PalmDetector.tflite",
+            "models/HandLandmarkDetector.tflite",
+        ],
+    )
+    app = App(info)
+    asset = ModelAsset(model_id="test_model", chipset=None)
+    result = app.fetch(tmp_path, model_asset=asset)
+
+    assert (result / "models" / "PalmDetector.tflite").exists()
+    assert (result / "models" / "HandLandmarkDetector.tflite").exists()
+
+
+def test_fetch_model_file_paths_count_mismatch_raises(monkeypatch, tmp_path):
+    """AppIncompatibleError when metadata.json count differs from model_file_paths count."""
+    import json
+
+    def fake_download_one_file(url: str, path: Path, extract: bool = False) -> Path:
+        path.mkdir(parents=True, exist_ok=True)
+        if "model" in url:
+            metadata: dict[str, dict[str, dict]] = {"model_files": {"model.onnx": {}}}
+            (path / "metadata.json").write_text(json.dumps(metadata))
+            (path / "model.onnx").touch()
+        return path
+
+    monkeypatch.setattr("qai_hub_apps.registry.base.download", fake_download_one_file)
+    monkeypatch.setattr("qai_hub_apps.registry.base._is_dev", lambda: False)
+    monkeypatch.setattr(
+        "qai_hub_apps.registry.base.get_asset_url",
+        MagicMock(return_value="https://example.com/model.zip"),
+    )
+
+    info = make_app_info(
+        url=AppUrl(source="https://example.com/app.zip"),
+        related_models=["test_model"],
+        model_file_paths=["models/a.onnx", "models/b.onnx"],
+    )
+    app = App(info)
+    asset = ModelAsset(model_id="test_model", chipset=None)
+    with pytest.raises(AppIncompatibleError, match="1 file\\(s\\) but 2 were expected"):
+        app.fetch(tmp_path, model_asset=asset)
+
+
+def test_fetch_model_file_paths_different_dirs_raises(monkeypatch, tmp_path):
+    """AppIncompatibleError when model_file_paths span different parent directories."""
+    monkeypatch.setattr("qai_hub_apps.registry.base.download", fake_download)
+    monkeypatch.setattr("qai_hub_apps.registry.base._is_dev", lambda: False)
+    monkeypatch.setattr(
+        "qai_hub_apps.registry.base.get_asset_url",
+        MagicMock(return_value="https://example.com/model.zip"),
+    )
+
+    info = make_app_info(
+        url=AppUrl(source="https://example.com/app.zip"),
+        related_models=["test_model"],
+        model_file_paths=["models/a.onnx", "assets/b.onnx"],
+    )
+    app = App(info)
+    asset = ModelAsset(model_id="test_model", chipset=None)
+    with pytest.raises(AppIncompatibleError, match="same parent directory"):
+        app.fetch(tmp_path, model_asset=asset)
+
+
+def test_fetch_model_missing_metadata_json_raises(monkeypatch, tmp_path):
+    """A model asset without metadata.json raises AppIncompatibleError."""
+
+    def fake_download_no_metadata(url: str, path: Path, extract: bool = False) -> Path:
+        path.mkdir(parents=True, exist_ok=True)
+        if "model" in url:
+            (path / "model.onnx").touch()
+        return path
+
+    monkeypatch.setattr(
+        "qai_hub_apps.registry.base.download", fake_download_no_metadata
+    )
+    monkeypatch.setattr("qai_hub_apps.registry.base._is_dev", lambda: False)
+    monkeypatch.setattr(
+        "qai_hub_apps.registry.base.get_asset_url",
+        MagicMock(return_value="https://example.com/model.zip"),
+    )
+
+    info = make_app_info(
+        url=AppUrl(source="https://example.com/app.zip"),
+        related_models=["test_model"],
+        model_file_paths=["models/model.onnx"],
+    )
+    app = App(info)
+    asset = ModelAsset(model_id="test_model", chipset=None)
+    with pytest.raises(AppIncompatibleError, match="is missing metadata\.json"):
+        app.fetch(tmp_path, model_asset=asset)
+
+
 def test_fetch_dest_exists_uses_next_free_path(monkeypatch, tmp_path):
     (tmp_path / "test_app").mkdir()
-    monkeypatch.setattr("qai_hub_apps.registry.base.download", _fake_download)
+    monkeypatch.setattr("qai_hub_apps.registry.base.download", fake_download)
     monkeypatch.setattr("qai_hub_apps.registry.base._is_dev", lambda: False)
 
     info = make_app_info(url=AppUrl(source="https://example.com/app.zip"))
@@ -332,7 +454,7 @@ def test_registry_apps_returns_all(sample_registry_yaml):
 
 
 def test_fetch_app_unsupported_platform_warns(monkeypatch, tmp_path, capsys):
-    monkeypatch.setattr("qai_hub_apps.registry.base.download", _fake_download)
+    monkeypatch.setattr("qai_hub_apps.registry.base.download", fake_download)
     monkeypatch.setattr("qai_hub_apps.registry.base._is_dev", lambda: False)
     monkeypatch.setattr(
         "qai_hub_apps.registry.base.is_app_supported", lambda app: False
@@ -342,7 +464,7 @@ def test_fetch_app_unsupported_platform_warns(monkeypatch, tmp_path, capsys):
     from qai_hub_apps.configs.registry_yaml import AppRegistry
 
     info = make_app_info(url=AppUrl(source="https://example.com/app.zip"))
-    raw = AppRegistry(schema_version="1.0", min_cli_version="0.0.1", apps=[info])
+    raw = AppRegistry(schema_version="1.1", min_cli_version="0.0.1", apps=[info])
     registry = Registry(raw)
     registry.fetch_app("test_app", tmp_path)
 

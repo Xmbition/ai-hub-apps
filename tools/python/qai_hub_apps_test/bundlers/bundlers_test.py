@@ -4,6 +4,7 @@
 # ---------------------------------------------------------------------
 from __future__ import annotations
 
+import zipfile
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -19,41 +20,6 @@ pytestmark = pytest.mark.bundler_unit
 _SDK = "qai_hub_apps_utils"
 
 
-def test_bundle_app_by_path_python_app(
-    dummy_python_app_path: Path,
-    dummy_python_sdk_path: Path,
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    mock_bundle = MagicMock()
-    monkeypatch.setattr(bundlers_mod, "_python_bundle", mock_bundle)
-
-    out = tmp_path / "out"
-    bundle_app(dummy_python_app_path, out, sdk_parent=dummy_python_sdk_path)
-
-    mock_bundle.assert_called_once_with(
-        dummy_python_app_path, out, dummy_python_sdk_path, False
-    )
-
-
-def test_bundle_app_by_str_id_resolves_dir(
-    dummy_python_app_path: Path,
-    dummy_python_sdk_path: Path,
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    mock_bundle = MagicMock()
-    monkeypatch.setattr(bundlers_mod, "_python_bundle", mock_bundle)
-    monkeypatch.setattr(bundlers_mod, "find_app_dir", lambda _: dummy_python_app_path)
-
-    out = tmp_path / "out"
-    bundle_app("my_dummy_app", out, sdk_parent=dummy_python_sdk_path)
-
-    mock_bundle.assert_called_once_with(
-        dummy_python_app_path, out, dummy_python_sdk_path, False
-    )
-
-
 def test_bundle_app_non_python_raises(tmp_path: Path) -> None:
     app_dir = tmp_path / "myapp"
     app_dir.mkdir()
@@ -64,24 +30,32 @@ def test_bundle_app_non_python_raises(tmp_path: Path) -> None:
         bundle_app(app_dir, tmp_path / "out")
 
 
-def test_bundle_app_auto_resolves_sdk_parent(
-    dummy_python_app_path: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+def test_bundle_app_by_str_id_resolves_dir(
+    dummy_python_app_path: Path,
+    dummy_python_sdk_path: Path,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    fake_sdk = tmp_path / "fake_sdk"
-    mock_bundle = MagicMock()
-    monkeypatch.setattr(bundlers_mod, "_python_bundle", mock_bundle)
-    monkeypatch.setattr(bundlers_mod, "resolve_sdk_root", lambda _: fake_sdk)
+    def mock_bundle_source(app_root: Path, out_dir: Path, sdk_parent: Path) -> None:
+        out_dir.mkdir(parents=True, exist_ok=True)
+
+    monkeypatch.setattr(bundlers_mod, "_bundle_source", mock_bundle_source)
+    monkeypatch.setattr(bundlers_mod, "find_app_dir", lambda _: dummy_python_app_path)
+    monkeypatch.setattr(bundlers_mod, "_bundle_scripts", MagicMock())
 
     out = tmp_path / "out"
-    bundle_app(dummy_python_app_path, out)
+    bundle_app("my_dummy_app", out, sdk_parent=dummy_python_sdk_path)
 
-    mock_bundle.assert_called_once_with(dummy_python_app_path, out, fake_sdk, False)
+    assert (out / "my_dummy_app").is_dir()
 
 
 def test_bundle_python_app_e2e(
-    dummy_python_app_path: Path, dummy_python_sdk_path: Path, tmp_path: Path
+    dummy_python_app_path: Path,
+    dummy_python_sdk_path: Path,
+    dummy_scripts_path: Path,
+    tmp_path: Path,
 ) -> None:
-    """E2E: bundle a Python app that imports from a dummy SDK (no mocks).
+    """E2E: bundle a Python app with SDK imports and install scripts (no mocks).
 
     Verifies that bundle_app:
     - copies app source files
@@ -90,9 +64,24 @@ def test_bundle_python_app_e2e(
     - includes the SDK package __init__.py
     - does NOT copy unreferenced SDK modules
     - merges app requirements with per-module SDK requirements
+    - copies referenced shared scripts to scripts/
+    - copies versions.env to scripts/
+    - rewrites source lines in install_*.sh
     """
+    # Add an install script to the app
+    (dummy_python_app_path / "install_runtime.sh").write_text(
+        "#!/usr/bin/env bash\n"
+        f"source {dummy_scripts_path}/apt_utils.sh\n"
+        "install_apt_pkg libfoo\n"
+    )
+
     out_dir = tmp_path / "out"
-    bundle_app(dummy_python_app_path, out_dir, sdk_parent=dummy_python_sdk_path)
+    bundle_app(
+        dummy_python_app_path,
+        out_dir,
+        sdk_parent=dummy_python_sdk_path,
+        shared_scripts_root=dummy_scripts_path,
+    )
 
     bundle = out_dir / "my_dummy_app"
     assert bundle.is_dir()
@@ -114,3 +103,40 @@ def test_bundle_python_app_e2e(
     reqs = (bundle / "requirements.txt").read_text()
     assert "Pillow>=9.0" in reqs
     assert "numpy>=1.24" in reqs
+
+    # shared scripts copied transitively (apt_utils + load_versions)
+    assert (bundle / "scripts" / "apt_utils.sh").exists()
+    assert (bundle / "scripts" / "load_versions.sh").exists()
+    assert (bundle / "scripts" / "versions.env").exists()
+
+    # source line rewritten to bundle-local path
+    assert (
+        'source "$(dirname "${BASH_SOURCE[0]}")/scripts/apt_utils.sh"'
+        in (bundle / "install_runtime.sh").read_text()
+    )
+
+
+def test_bundle_app_make_zip(
+    dummy_python_app_path: Path, dummy_python_sdk_path: Path, tmp_path: Path
+) -> None:
+    out_dir = tmp_path / "out"
+    bundle_app(
+        dummy_python_app_path,
+        out_dir,
+        sdk_parent=dummy_python_sdk_path,
+        make_zip=True,
+    )
+    zip_path = out_dir / "my_dummy_app.zip"
+    assert zip_path.is_file()
+    with zipfile.ZipFile(zip_path) as zf:
+        assert "main.py" in zf.namelist()
+
+
+def test_bundle_app_overwrites_existing_dest(
+    dummy_python_app_path: Path, dummy_python_sdk_path: Path, tmp_path: Path
+) -> None:
+    out_dir = tmp_path / "out"
+    bundle_app(dummy_python_app_path, out_dir, sdk_parent=dummy_python_sdk_path)
+    (dummy_python_app_path / "main.py").write_text("# v2\n")
+    bundle_app(dummy_python_app_path, out_dir, sdk_parent=dummy_python_sdk_path)
+    assert "v2" in (out_dir / "my_dummy_app" / "main.py").read_text()

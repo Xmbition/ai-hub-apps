@@ -3,60 +3,87 @@
 A Python app using GStreamer, OpenCV, and LiteRT that performs hand detection
 and gesture analysis on a live camera stream.
 
-## Device setup
+## Setup
 
-Even if run via Docker, there is one requirement needed outside the Docker image:
+### 1. Install Python 3.10+
 
+```bash
+sudo apt-get update
+sudo apt-get install python3 python3-venv
 ```
-sudo apt install libqnn1
+
+### 2. Install Docker
+
+Follow [these instructions](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository) to install Docker.
+
+### 3. Install Ubuntu host packages *(skip if not on Ubuntu OS)*
+
+```bash
+sudo apt-get install qcom-fastrpc1 qcom-fastrpc-dev
 ```
 
-## Run via Docker
+If you are using a built-in camera on the Dragonwing RB3, also install `qcom-camera-server`:
 
-The easiest way to run the app is via Docker. First, please make sure Docker is
-installed by following [these
-instructions](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository):
-
-Build the docker image:
-
+```bash
+sudo apt-get install qcom-camera-server
 ```
+
+After installing, reboot the device.
+
+### 4. Create the dev environment
+
+From the repo root, create a virtual environment and install the CLI:
+
+```bash
+bash tools/setup_env.sh --with-cli
+source qaiha-dev/bin/activate
+```
+
+### 5. Fetch the app
+
+```bash
+qai-hub-apps fetch mediapipe_hand_gesture_ubuntu_py --model mediapipe_hand_gesture -o <APP_DIR>
+cd <APP_DIR>/mediapipe_hand_gesture_ubuntu_py
+```
+
+### 6. Build the Docker image
+
+```bash
 ./build_docker.sh
 ```
-Export a suitable model using `qai_hub_models` choosing a supported device of your choice, here we export for [Dragonwing RB3 Gen 2](https://www.qualcomm.com/developer/hardware/rb3-gen-2-development-kit)
+
+## Running the app
+
+All run commands are issued through `run_docker.sh`.
+To list available options:
+```
+./run_docker.sh --help
+```
+
+### List available camera sources
+
 ```bash
-python -m qai_hub_models.models.mediapipe_hand_gesture.export --target-runtime tflite --device "Dragonwing RB3 Gen 2 Vision Kit" --device-os 1.6 --precision w8a8 --skip-inferencing --skip-profiling
-```
-And move the model files to `<app_root>/models` directory as
-```
-models/PalmDetector.tflite
-models/HandLandmarkDetector.tflite
-models/CannedGestureClassifier.tflite
-```
-
-You can run the docker via the `run_docker.sh` command.
-List available camera sources (or [Video4Linux2](https://en.wikipedia.org/wiki/Video4Linux) devices):
-
-```
 ./run_docker.sh --list-devices
 ```
 
-Pick a device, in this case
+### Run with a specific camera
 
+```bash
+./run_docker.sh --hexagon-version <HEX_VER> --video-device /dev/video0
 ```
-./run_docker.sh --video-device /dev/video0
-```
 
-This will serve the camera feed through port 8080, viewable from a web-browser
-if you got to `http://<ip-address>:8080`, where `<ip-address>` is replaced by
-the IP address of your IoT device.
+> [!IMPORTANT]
+> You must provide `--hexagon-version` matching your device's Hexagon DSP version. For example, the [Dragonwing RB3 Gen 2](https://www.qualcomm.com/developer/hardware/rb3-gen-2-development-kit) uses Hexagon v68. To find the Hexagon version for your device, visit the [AI Hub device catalogue](https://workbench.aihub.qualcomm.com/devices/).
 
-For debugging, it can be useful to run the docker interactively:
+> [!NOTE]
+> To use the integrated camera of a Dragonwing RB3, the `qtiqmmfsrc` GStreamer plugin must be used.
+> `./run_docker.sh --hexagon-version v68 --video-gstreamer-source "qtiqmmfsrc name=camsrc camera=0"`.
 
-```
+This serves the camera feed on port 8080. Open a browser and navigate to
+`http://<device-ip>:8080` to view the stream.
+
+### Interactive / debug mode
+
+```bash
 ./run_docker.sh --interactive
 ```
-
-## Run directly
-
-You can also run the app outside Docker. Please refer to `Dockerfile` for all
-the necessary installation steps.

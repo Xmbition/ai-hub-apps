@@ -6,7 +6,7 @@
 # Create a Python virtual environment and install qai_hub_apps_test.
 #
 # Usage:
-#   bash tools/setup_env.sh [--venv <path>] [--python <exe>] [--extras <extra>]
+#   bash tools/setup_env.sh [--venv <path>] [--python <exe>] [--extras <extra>] [--with-cli]
 #
 # Defaults:
 #   --venv    qaiha-dev
@@ -16,12 +16,16 @@
 # Available extras:
 #   dev        Full test install: pytest, qai_hub_models, boto3, etc. (default)
 #   precommit  Light install: pre-commit + mypy only (for CI lint checks)
+#
+# Flags:
+#   --with-cli  Also install the qai-hub-apps CLI package (cli/)
 
 set -euo pipefail
 
 VENV_PATH="qaiha-dev"
 PYTHON="python3"
 EXTRAS="dev"
+WITH_CLI=false
 
 while [ $# -gt 0 ]; do
     case $1 in
@@ -31,6 +35,7 @@ while [ $# -gt 0 ]; do
         --python)    PYTHON="$2"; shift ;;
         --extras=*)  EXTRAS="${1##--extras=}" ;;
         --extras)    EXTRAS="$2"; shift ;;
+        --with-cli)  WITH_CLI=true ;;
         *) echo "Unknown option: $1" >&2; exit 1 ;;
     esac
     shift
@@ -62,6 +67,15 @@ if command -v uv &>/dev/null; then
     uv pip install --python "$VENV_PATH/bin/python" -e "$INSTALL_TARGET"
 else
     "$VENV_PATH/bin/pip" install -e "$INSTALL_TARGET"
+fi
+
+if [ "$WITH_CLI" = true ]; then
+    echo "Installing CLI package (cli/)..."
+    if command -v uv &>/dev/null; then
+        uv pip install --python "$VENV_PATH/bin/python" -e "$REPO_ROOT/cli/"
+    else
+        "$VENV_PATH/bin/pip" install -e "$REPO_ROOT/cli/"
+    fi
 fi
 
 echo ""

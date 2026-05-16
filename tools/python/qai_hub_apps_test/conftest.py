@@ -50,6 +50,40 @@ def sample_app_info() -> QAIHAAppInfo:
 
 
 @pytest.fixture
+def dummy_scripts_path(tmp_path: Path) -> Path:
+    """Minimal shared scripts directory mirroring apps/_shared/scripts/.
+
+    Returns the scripts_root directory::
+
+        tmp_path/apps/_shared/scripts/
+          versions.env          # PYTHON_VERSION="3.10"
+          load_versions.sh      # leaf — sourced by apt_utils.sh
+          apt_utils.sh          # sources load_versions.sh (transitive dep demo)
+          load_versions.ps1     # leaf — sourced by winget_utils.ps1 / pip_utils.ps1
+          winget_utils.ps1      # sources load_versions.ps1
+          pip_utils.ps1         # sources load_versions.ps1
+    """
+    scripts_root = tmp_path / "apps" / "_shared" / "scripts"
+    scripts_root.mkdir(parents=True)
+    (scripts_root / "versions.env").write_text('PYTHON_VERSION="3.10"\n')
+    load_sh = scripts_root / "load_versions.sh"
+    load_sh.write_text("# load versions\n")
+    (scripts_root / "apt_utils.sh").write_text(
+        f'source {load_sh}\ninstall_apt_pkg() {{ echo "$1"; }}\n'
+    )
+    load_ps1 = scripts_root / "load_versions.ps1"
+    load_ps1.write_text("# load versions\n")
+    (scripts_root / "winget_utils.ps1").write_text(
+        f'. "{load_ps1}"\nfunction Install-WingetPackage {{ param($Id) }}\n'
+    )
+    (scripts_root / "pip_utils.ps1").write_text(
+        f'. "{load_ps1}"\nfunction Install-PipDeps {{ param($R) }}\n'
+    )
+    (scripts_root / "unreferenced.sh").write_text("# unused\n")
+    return scripts_root
+
+
+@pytest.fixture
 def dummy_python_app_path(tmp_path: Path) -> Path:
     """Minimal dummy Python app that imports qai_hub_apps_utils.helper.
 

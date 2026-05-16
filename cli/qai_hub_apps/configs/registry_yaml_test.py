@@ -15,7 +15,7 @@ from qai_hub_apps.conftest import make_app_info
 
 def _make_registry(**overrides) -> AppRegistry:
     defaults = dict(
-        schema_version="1.0",
+        schema_version="1.1",
         min_cli_version="0.0.1",
         apps=[make_app_info()],
     )
@@ -23,11 +23,21 @@ def _make_registry(**overrides) -> AppRegistry:
     return AppRegistry(**defaults)
 
 
+def test_old_schema_version_known_suggests_downgrade():
+    with pytest.raises(ValidationError, match=r"qai-hub-apps<0.30.0"):
+        _make_registry(schema_version="1.0")
+
+
+def test_old_schema_version_unknown_gives_generic_message():
+    with pytest.raises(ValidationError, match="No compatible CLI version is known"):
+        _make_registry(schema_version="0.9")
+
+
 def test_unique_ids_ok():
     app_a = make_app_info(id="app_a", name="App A")
     app_b = make_app_info(id="app_b", name="App B")
     registry = AppRegistry(
-        schema_version="1.0", min_cli_version="0.0.1", apps=[app_a, app_b]
+        schema_version="1.1", min_cli_version="0.0.1", apps=[app_a, app_b]
     )
     assert len(registry.apps) == 2
 
@@ -36,7 +46,7 @@ def test_unique_ids_raises_on_duplicate():
     app_a = make_app_info(id="same_id", name="App A")
     app_b = make_app_info(id="same_id", name="App B")
     with pytest.raises(ValidationError, match="same_id"):
-        AppRegistry(schema_version="1.0", min_cli_version="0.0.1", apps=[app_a, app_b])
+        AppRegistry(schema_version="1.1", min_cli_version="0.0.1", apps=[app_a, app_b])
 
 
 def test_no_version_dev_warns(monkeypatch):

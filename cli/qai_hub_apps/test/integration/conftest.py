@@ -50,7 +50,7 @@ def snapshot(request: pytest.FixtureRequest) -> Callable[[str, str], None]:
 
 
 _TWO_APP_REGISTRY = """\
-schema_version: '1.0'
+schema_version: '1.1'
 min_cli_version: 0.0.1
 apps:
 - name: Whisper Windows

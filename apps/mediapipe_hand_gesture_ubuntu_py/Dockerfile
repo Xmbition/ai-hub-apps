@@ -20,6 +20,7 @@ RUN apt update && apt install -y \
     gstreamer1.0-plugins-qcom-vtransform \
     v4l2loopback-dkms \
     v4l2loopback-utils \
+    gstreamer1.0-libav \
     linux-headers-$(uname -r)
 
 RUN python3.12 -m venv /opt/venv
@@ -36,6 +37,9 @@ ENV __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/10_adreno.json
 
 RUN usermod -aG video root
 
-WORKDIR /root
+WORKDIR /app
 
-ENTRYPOINT ["python", "main.py"]
+COPY . /app
+
+ENTRYPOINT ["bash", "-c", "source /app/scripts/qairt_utils.sh && install_qairt && exec \"$@\"", "--"]
+CMD ["bash"]

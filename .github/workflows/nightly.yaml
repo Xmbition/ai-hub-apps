@@ -58,6 +58,7 @@ jobs:
       models_branch_name: main
       create_pr: false
       import_models: true
+      import_mode: no-verify
 
   notify_failure:
     if: ${{ failure() && (github.event_name == 'schedule' || inputs.notify_failure) }}
@@ -155,7 +156,7 @@ jobs:
       # Send result to Slack channel #ai-hub-apps
       - name: Send Slack Notification
         id: slack_notification
-        uses: slackapi/slack-github-action@v3.0.1
+        uses: slackapi/slack-github-action@v3.0.3
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_NOTIFIER_TOKEN }}

@@ -5,7 +5,7 @@
 # Create a Python virtual environment and install qai_hub_apps_test.
 #
 # Usage:
-#   . tools/setup_env.ps1 [-Venv <path>] [-Python <exe>] [-Extras <extra>]
+#   . tools/setup_env.ps1 [-Venv <path>] [-Python <exe>] [-Extras <extra>] [-WithCli]
 #
 # Defaults:
 #   -Venv    qaiha-dev
@@ -15,11 +15,15 @@
 # Available extras:
 #   dev        Full test install: pytest, qai_hub_models, boto3, etc. (default)
 #   precommit  Light install: pre-commit + mypy only (for CI lint checks)
+#
+# Flags:
+#   -WithCli  Also install the qai-hub-apps CLI package (cli/)
 
 param(
     [string]$Venv = "qaiha-dev",
     [string]$Python = "python",
-    [string]$Extras = "dev"
+    [string]$Extras = "dev",
+    [switch]$WithCli
 )
 
 $ErrorActionPreference = "Stop"
@@ -52,6 +56,16 @@ if ($uvAvailable) {
     uv pip install --python "$Venv\Scripts\python.exe" -e $InstallTarget
 } else {
     & "$Venv\Scripts\pip.exe" install -e $InstallTarget
+}
+
+if ($WithCli) {
+    Write-Host "Installing CLI package (cli/)..."
+    $uvAvailable = Get-Command uv -ErrorAction SilentlyContinue
+    if ($uvAvailable) {
+        uv pip install --python "$Venv\Scripts\python.exe" -e "$RepoRoot\cli\"
+    } else {
+        & "$Venv\Scripts\pip.exe" install -e "$RepoRoot\cli\"
+    }
 }
 
 Write-Host ""

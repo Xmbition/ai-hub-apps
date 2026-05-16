@@ -17,5 +17,7 @@ os:
 languages: ['Python']
 use_case: 'Speech Recognition'
 related_models: [whisper_base]
-model_file_path: 'models'
+model_file_paths:
+  - 'models/encoder.onnx'
+  - 'models/decoder.onnx'
 skip_test: infra doesn't support building python app. CLI will fix https://github.com/qcom-ai-hub/tetracode/issues/17462
